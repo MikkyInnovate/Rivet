@@ -27,6 +27,7 @@ function SimulationEngine() {
 
 function PartRenderer({ node }: { node: SceneNode }) {
   const updateNodePosition = useSceneStore((s) => s.updateNodePosition);
+  const isSelected = useSceneStore((s) => s.selectedNodeId === node.id);
   
   const renderItem = () => {
     switch (node.type) {
@@ -65,6 +66,17 @@ function PartRenderer({ node }: { node: SceneNode }) {
   const matrixRef = React.useRef(new THREE.Matrix4());
 
   if (node.type === "Breadboard") return renderItem();
+
+  // Move gizmo only on the selected part — an always-on gizmo per part turns
+  // the workbench into a debug view. Click a part to select & move it.
+  if (!isSelected) {
+    return (
+      <group position={node.position}>
+        {renderItem()}
+        <Pins node={node} />
+      </group>
+    );
+  }
 
   return (
     <PivotControls

@@ -42,9 +42,9 @@ export default function Pins({ node }: { node: SceneNode }) {
                 document.body.style.cursor = "auto";
               }}
             >
-              <sphereGeometry args={[isArmed ? 0.11 : 0.08, 16, 16]} />
+              <sphereGeometry args={[isArmed ? 0.12 : 0.09, 16, 16]} />
               <meshStandardMaterial
-                color={isArmed ? "#2DD4BF" : isHovered ? "#5EEAD4" : "#94a3b8"}
+                color={isArmed ? "#2DD4BF" : isHovered ? "#5EEAD4" : "#64748b"}
                 emissive={active ? "#2DD4BF" : "#000000"}
                 emissiveIntensity={isArmed ? 1.2 : isHovered ? 0.6 : 0}
                 metalness={0.6}

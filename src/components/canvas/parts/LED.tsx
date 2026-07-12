@@ -59,72 +59,95 @@ export default function LED({ node }: { node: SceneNode }) {
         selectNode(node.id);
       }}
     >
-      <group position={[0, 1.6, 0]}>
-        {/* Bulb base cylinder */}
-        <mesh ref={baseRef} position={[0, -0.15, 0]}>
-          <cylinderGeometry args={[0.25, 0.25, 0.3]} />
-          <meshStandardMaterial
-            color={colorHex}
-            transparent
-            opacity={0.7}
-            emissive={colorHex}
-            emissiveIntensity={0}
-          />
-          {isSelected && <Edges color="#2563EB" scale={1.05} />}
-        </mesh>
+      {/* Legs — real 5mm LED: the LONGER leg is the anode (+), on the left */}
+      <mesh position={[-0.1, 0.475, 0]}>
+        <cylinderGeometry args={[0.018, 0.018, 0.95]} />
+        <meshStandardMaterial color="#b8bcc4" metalness={0.9} roughness={0.25} />
+      </mesh>
+      <mesh position={[0.1, 0.4, 0]}>
+        <cylinderGeometry args={[0.018, 0.018, 0.8]} />
+        <meshStandardMaterial color="#b8bcc4" metalness={0.9} roughness={0.25} />
+      </mesh>
 
-        {/* Bulb dome */}
-        <mesh ref={bulbRef} position={[0, 0.05, 0]}>
-          <sphereGeometry args={[0.25, 16, 16]} />
-          <meshStandardMaterial
-            color={colorHex}
-            transparent
-            opacity={0.7}
-            emissive={colorHex}
-            emissiveIntensity={0}
-          />
-        </mesh>
-
-        {/* Point light for glow effect */}
-        <pointLight
-          ref={glowRef}
-          position={[0, 0.1, 0]}
+      {/* Flange (the flat rim at the base of the epoxy package) */}
+      <mesh ref={baseRef} position={[0, 0.98, 0]}>
+        <cylinderGeometry args={[0.21, 0.21, 0.06, 24]} />
+        <meshStandardMaterial
           color={colorHex}
-          intensity={0}
-          distance={5}
-          decay={2}
+          transparent
+          opacity={0.75}
+          roughness={0.2}
+          emissive={colorHex}
+          emissiveIntensity={0}
         />
-      </group>
+        {isSelected && <Edges color="#2563EB" scale={1.08} />}
+      </mesh>
 
-      {/* Legs */}
-      <mesh position={[-0.1, 0.6, 0]}>
-        <cylinderGeometry args={[0.02, 0.02, 1.2]} />
-        <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.3} />
+      {/* Epoxy body */}
+      <mesh position={[0, 1.185, 0]}>
+        <cylinderGeometry args={[0.165, 0.165, 0.35, 24]} />
+        <meshStandardMaterial
+          color={colorHex}
+          transparent
+          opacity={0.65}
+          roughness={0.15}
+          emissive={colorHex}
+          emissiveIntensity={0}
+        />
       </mesh>
-      <mesh position={[0.1, 0.5, 0]}>
-        <cylinderGeometry args={[0.02, 0.02, 1.0]} />
-        <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.3} />
+
+      {/* Dome cap */}
+      <mesh ref={bulbRef} position={[0, 1.36, 0]}>
+        <sphereGeometry args={[0.165, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial
+          color={colorHex}
+          transparent
+          opacity={0.65}
+          roughness={0.1}
+          emissive={colorHex}
+          emissiveIntensity={0}
+        />
       </mesh>
+
+      {/* Internal anvil + post, visible through the epoxy like a real LED */}
+      <mesh position={[0.04, 1.15, 0]}>
+        <boxGeometry args={[0.07, 0.16, 0.04]} />
+        <meshStandardMaterial color="#3f3f46" metalness={0.7} roughness={0.4} />
+      </mesh>
+      <mesh position={[-0.05, 1.1, 0]}>
+        <boxGeometry args={[0.03, 0.1, 0.03]} />
+        <meshStandardMaterial color="#52525b" metalness={0.7} roughness={0.4} />
+      </mesh>
+
+      {/* Point light for glow effect */}
+      <pointLight
+        ref={glowRef}
+        position={[0, 1.35, 0]}
+        color={colorHex}
+        intensity={0}
+        distance={5}
+        decay={2}
+      />
 
       {/* Labels */}
       {showLabels && (
         <>
-          <Html position={[-0.1, 2.3, 0]} center distanceFactor={10}>
-            <div className="bg-slate-900/90 text-white text-[9px] font-mono px-1 py-0.5 rounded whitespace-nowrap">
-              Cathode (-)
-            </div>
-          </Html>
-          <Html position={[0.1, 2.1, 0]} center distanceFactor={10}>
+          <Html position={[-0.1, 1.85, 0]} center distanceFactor={10}>
             <div className="bg-slate-900/90 text-white text-[9px] font-mono px-1 py-0.5 rounded whitespace-nowrap">
               Anode (+)
+            </div>
+          </Html>
+          <Html position={[0.1, 1.65, 0]} center distanceFactor={10}>
+            <div className="bg-slate-900/90 text-white text-[9px] font-mono px-1 py-0.5 rounded whitespace-nowrap">
+              Cathode (−)
             </div>
           </Html>
         </>
       )}
 
       {/* Invisible hitbox */}
-      <mesh visible={false}>
-        <boxGeometry args={[0.8, 2.5, 0.8]} />
+      <mesh visible={false} position={[0, 0.9, 0]}>
+        <boxGeometry args={[0.7, 1.8, 0.6]} />
       </mesh>
     </group>
   );
