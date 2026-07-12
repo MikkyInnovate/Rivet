@@ -13,20 +13,20 @@ export interface PinDef {
  */
 export const PART_PINS: Partial<Record<PartType, PinDef[]>> = {
   Battery: [
-    { id: "pos", label: "+", offset: [0.5, 2.75, 0.5] },
-    { id: "neg", label: "−", offset: [-0.5, 2.75, 0.5] },
+    { id: "pos", label: "+", offset: [-0.35, 2.44, 0] },
+    { id: "neg", label: "−", offset: [0.35, 2.42, 0] },
   ],
   Led: [
-    { id: "anode", label: "+", offset: [-0.1, 0.08, 0] },
-    { id: "cathode", label: "−", offset: [0.1, 0.08, 0] },
+    { id: "anode", label: "+", offset: [-0.175, 0.08, 0] },
+    { id: "cathode", label: "−", offset: [0.175, 0.08, 0] },
   ],
   Resistor: [
-    { id: "a", label: "1", offset: [-0.55, 0.08, 0] },
-    { id: "b", label: "2", offset: [0.55, 0.08, 0] },
+    { id: "a", label: "1", offset: [-0.7, 0.08, 0] },
+    { id: "b", label: "2", offset: [0.7, 0.08, 0] },
   ],
   Capacitor: [
-    { id: "pos", label: "+", offset: [-0.14, 0.3, 0] },
-    { id: "neg", label: "−", offset: [0.14, 0.27, 0] },
+    { id: "pos", label: "+", offset: [-0.175, 0.08, 0] },
+    { id: "neg", label: "−", offset: [0.175, 0.08, 0] },
   ],
 };
 

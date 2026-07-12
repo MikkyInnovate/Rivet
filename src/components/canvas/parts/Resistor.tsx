@@ -83,15 +83,15 @@ export default function Resistor({ node }: { node: SceneNode }) {
       {/* Leads: out of the body ends, elbow, then down to the board */}
       {[-1, 1].map((side) => (
         <group key={side}>
-          <mesh position={[side * 0.42, BODY_Y, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.02, 0.02, 0.26]} />
+          <mesh position={[side * 0.5, BODY_Y, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.02, 0.02, 0.42]} />
             {LEAD_MAT}
           </mesh>
-          <mesh position={[side * 0.55, BODY_Y, 0]}>
+          <mesh position={[side * 0.7, BODY_Y, 0]}>
             <sphereGeometry args={[0.021, 10, 10]} />
             {LEAD_MAT}
           </mesh>
-          <mesh position={[side * 0.55, BODY_Y / 2, 0]}>
+          <mesh position={[side * 0.7, BODY_Y / 2, 0]}>
             <cylinderGeometry args={[0.02, 0.02, BODY_Y]} />
             {LEAD_MAT}
           </mesh>
@@ -109,7 +109,7 @@ export default function Resistor({ node }: { node: SceneNode }) {
 
       {/* Hitbox */}
       <mesh visible={false} position={[0, 0.35, 0]}>
-        <boxGeometry args={[1.3, 0.75, 0.5]} />
+        <boxGeometry args={[1.6, 0.75, 0.5]} />
       </mesh>
     </group>
   );

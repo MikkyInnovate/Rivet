@@ -1,60 +1,35 @@
 "use client";
 import React, { useMemo } from "react";
 import { useSceneStore, SceneNode } from "@/store/useSceneStore";
-import { Edges } from "@react-three/drei";
+import { Edges, Instances, Instance, RoundedBox } from "@react-three/drei";
+
+// Everything derives from the hole pitch (2.54mm real-world). Rows sit at
+// integer multiples of P from the center so part legs (also built on P) always
+// land in holes: banks at ±1P..±3P, power rails at ±4P and ±5P, channel at 0.
+export const BOARD_PITCH = 0.35;
+const P = BOARD_PITCH;
+const COLS = 36;
+const START_X = -((COLS - 1) * P) / 2;
+const BODY = { w: 14, h: 0.5, d: 4.2 };
+const TOP_Y = BODY.h / 2;
+
+const BANK_ROWS = [-3, -2, -1, 1, 2, 3];
+const RAIL_ROWS = [-5, -4, 4, 5];
 
 export default function Breadboard({ node }: { node: SceneNode }) {
   const selectedNodeId = useSceneStore((s) => s.selectedNodeId);
   const selectNode = useSceneStore((s) => s.selectNode);
   const isSelected = selectedNodeId === node.id;
 
-  // Generate pin holes — dark visible dots
-  const pins = useMemo(() => {
-    const result: { x: number; z: number }[] = [];
-    const cols = 30;
-    const rows = 5;
-    const spacing = 0.35;
-    const startX = -(cols * spacing) / 2;
-
-    // Top power rail row 1
-    for (let c = 0; c < cols; c++) {
-      result.push({ x: startX + c * spacing, z: -1.55 });
+  const holes = useMemo(() => {
+    const out: { x: number; z: number }[] = [];
+    for (let c = 0; c < COLS; c++) {
+      const x = START_X + c * P;
+      for (const r of BANK_ROWS) out.push({ x, z: r * P });
+      // Rails skip every 6th column, like the groups-of-five on a real board
+      if (c % 6 !== 5) for (const r of RAIL_ROWS) out.push({ x, z: r * P });
     }
-    // Top power rail row 2
-    for (let c = 0; c < cols; c++) {
-      result.push({ x: startX + c * spacing, z: -1.25 });
-    }
-
-    // Main section top (5 rows)
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        result.push({
-          x: startX + c * spacing,
-          z: -0.7 + r * spacing,
-        });
-      }
-    }
-
-    // Main section bottom (5 rows)
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        result.push({
-          x: startX + c * spacing,
-          z: 0.55 + r * spacing,
-        });
-      }
-    }
-
-    // Bottom power rail row 1
-    for (let c = 0; c < cols; c++) {
-      result.push({ x: startX + c * spacing, z: 1.25 });
-    }
-    // Bottom power rail row 2
-    for (let c = 0; c < cols; c++) {
-      result.push({ x: startX + c * spacing, z: 1.55 });
-    }
-
-    return result;
+    return out;
   }, []);
 
   return (
@@ -65,132 +40,39 @@ export default function Breadboard({ node }: { node: SceneNode }) {
         selectNode(node.id);
       }}
     >
-      {/* Main body */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[14, 0.5, 4.2]} />
-        <meshStandardMaterial
-          color="#f0f0f0"
-          roughness={0.2}
-          metalness={0.05}
-        />
-        {isSelected && <Edges color="#2563EB" scale={1.01} />}
+      {/* Body: single white ABS slab with soft corners */}
+      <RoundedBox args={[BODY.w, BODY.h, BODY.d]} radius={0.06} smoothness={3} castShadow receiveShadow>
+        <meshStandardMaterial color="#fafafa" roughness={0.4} metalness={0.02} />
+        {isSelected && <Edges color="#2563EB" scale={1.005} />}
+      </RoundedBox>
+
+      {/* Center channel groove between the two banks */}
+      <mesh position={[0, TOP_Y - 0.03, 0]}>
+        <boxGeometry args={[BODY.w - 0.3, 0.07, 0.24]} />
+        <meshStandardMaterial color="#d9d9de" roughness={0.5} />
       </mesh>
 
-      {/* Raised edge - top */}
-      <mesh position={[0, 0.15, -2.0]}>
-        <boxGeometry args={[14.2, 0.3, 0.2]} />
-        <meshStandardMaterial color="#e5e5e5" roughness={0.3} />
-      </mesh>
-      {/* Raised edge - bottom */}
-      <mesh position={[0, 0.15, 2.0]}>
-        <boxGeometry args={[14.2, 0.3, 0.2]} />
-        <meshStandardMaterial color="#e5e5e5" roughness={0.3} />
-      </mesh>
-      {/* Raised edge - left */}
-      <mesh position={[-7.0, 0.15, 0]}>
-        <boxGeometry args={[0.2, 0.3, 4.2]} />
-        <meshStandardMaterial color="#e5e5e5" roughness={0.3} />
-      </mesh>
-      {/* Raised edge - right */}
-      <mesh position={[7.0, 0.15, 0]}>
-        <boxGeometry args={[0.2, 0.3, 4.2]} />
-        <meshStandardMaterial color="#e5e5e5" roughness={0.3} />
-      </mesh>
+      {/* Square holes — one instanced mesh, not hundreds of draw calls */}
+      <Instances limit={holes.length}>
+        <boxGeometry args={[0.12, 0.04, 0.12]} />
+        <meshStandardMaterial color="#2b2d31" roughness={0.9} />
+        {holes.map((h, i) => (
+          <Instance key={i} position={[h.x, TOP_Y + 0.005, h.z]} />
+        ))}
+      </Instances>
 
-      {/* Side clips */}
-      {[-5, -2, 2, 5].map((xPos) => (
-        <mesh key={`clip-top-${xPos}`} position={[xPos, 0.05, -2.2]}>
-          <boxGeometry args={[0.6, 0.2, 0.25]} />
-          <meshStandardMaterial color="#d4d4d4" roughness={0.3} />
-        </mesh>
-      ))}
-      {[-5, -2, 2, 5].map((xPos) => (
-        <mesh key={`clip-bot-${xPos}`} position={[xPos, 0.05, 2.2]}>
-          <boxGeometry args={[0.6, 0.2, 0.25]} />
-          <meshStandardMaterial color="#d4d4d4" roughness={0.3} />
-        </mesh>
-      ))}
-
-      {/* Center divider groove */}
-      <mesh position={[0, 0.26, 0]}>
-        <boxGeometry args={[12.5, 0.02, 0.2]} />
-        <meshStandardMaterial color="#d4d4d4" />
-      </mesh>
-
-      {/* Power rail color stripes */}
-      {/* Top red line */}
-      <mesh position={[0, 0.262, -1.55]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[12, 0.04]} />
-        <meshBasicMaterial color="#ef4444" opacity={0.7} transparent />
-      </mesh>
-      {/* Top blue line */}
-      <mesh position={[0, 0.262, -1.25]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[12, 0.04]} />
-        <meshBasicMaterial color="#3b82f6" opacity={0.7} transparent />
-      </mesh>
-      {/* Bottom red line */}
-      <mesh position={[0, 0.262, 1.25]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[12, 0.04]} />
-        <meshBasicMaterial color="#ef4444" opacity={0.7} transparent />
-      </mesh>
-      {/* Bottom blue line */}
-      <mesh position={[0, 0.262, 1.55]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[12, 0.04]} />
-        <meshBasicMaterial color="#3b82f6" opacity={0.7} transparent />
-      </mesh>
-
-      {/* + symbols at power rail edges */}
-      {[-6.2, 6.2].map((xPos) => (
-        <React.Fragment key={`plus-top-${xPos}`}>
-          <mesh position={[xPos, 0.27, -1.55]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[0.15, 0.04]} />
-            <meshBasicMaterial color="#ef4444" />
+      {/* Power-rail markings: red (+) outside, blue (−) inside, both sides */}
+      {[1, -1].map((s) => (
+        <group key={s}>
+          <mesh position={[0, TOP_Y + 0.002, s * (5 * P + 0.16)]}>
+            <boxGeometry args={[BODY.w - 1.2, 0.004, 0.045]} />
+            <meshStandardMaterial color="#e05252" roughness={0.6} />
           </mesh>
-          <mesh position={[xPos, 0.27, -1.55]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[0.04, 0.15]} />
-            <meshBasicMaterial color="#ef4444" />
+          <mesh position={[0, TOP_Y + 0.002, s * (4 * P - 0.16)]}>
+            <boxGeometry args={[BODY.w - 1.2, 0.004, 0.045]} />
+            <meshStandardMaterial color="#5286e0" roughness={0.6} />
           </mesh>
-        </React.Fragment>
-      ))}
-      {[-6.2, 6.2].map((xPos) => (
-        <React.Fragment key={`minus-top-${xPos}`}>
-          <mesh position={[xPos, 0.27, -1.25]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[0.15, 0.04]} />
-            <meshBasicMaterial color="#3b82f6" />
-          </mesh>
-        </React.Fragment>
-      ))}
-      {[-6.2, 6.2].map((xPos) => (
-        <React.Fragment key={`plus-bot-${xPos}`}>
-          <mesh position={[xPos, 0.27, 1.25]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[0.15, 0.04]} />
-            <meshBasicMaterial color="#ef4444" />
-          </mesh>
-          <mesh position={[xPos, 0.27, 1.25]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[0.04, 0.15]} />
-            <meshBasicMaterial color="#ef4444" />
-          </mesh>
-        </React.Fragment>
-      ))}
-      {[-6.2, 6.2].map((xPos) => (
-        <React.Fragment key={`minus-bot-${xPos}`}>
-          <mesh position={[xPos, 0.27, 1.55]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[0.15, 0.04]} />
-            <meshBasicMaterial color="#3b82f6" />
-          </mesh>
-        </React.Fragment>
-      ))}
-
-      {/* Pin holes — dark circles visible from top */}
-      {pins.map((pin, i) => (
-        <mesh
-          key={i}
-          position={[pin.x, 0.265, pin.z]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <circleGeometry args={[0.07, 8]} />
-          <meshBasicMaterial color="#1a1a1a" />
-        </mesh>
+        </group>
       ))}
     </group>
   );

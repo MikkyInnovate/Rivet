@@ -60,11 +60,11 @@ export default function LED({ node }: { node: SceneNode }) {
       }}
     >
       {/* Legs — real 5mm LED: the LONGER leg is the anode (+), on the left */}
-      <mesh position={[-0.1, 0.475, 0]}>
+      <mesh position={[-0.175, 0.475, 0]}>
         <cylinderGeometry args={[0.018, 0.018, 0.95]} />
         <meshStandardMaterial color="#b8bcc4" metalness={0.9} roughness={0.25} />
       </mesh>
-      <mesh position={[0.1, 0.4, 0]}>
+      <mesh position={[0.175, 0.4, 0]}>
         <cylinderGeometry args={[0.018, 0.018, 0.8]} />
         <meshStandardMaterial color="#b8bcc4" metalness={0.9} roughness={0.25} />
       </mesh>
@@ -140,12 +140,12 @@ export default function LED({ node }: { node: SceneNode }) {
       {/* Labels */}
       {showLabels && (
         <>
-          <Html position={[-0.1, 1.85, 0]} center distanceFactor={10}>
+          <Html position={[-0.175, 1.85, 0]} center distanceFactor={10}>
             <div className="bg-slate-900/90 text-white text-[9px] font-mono px-1 py-0.5 rounded whitespace-nowrap">
               Anode (+)
             </div>
           </Html>
-          <Html position={[0.1, 1.65, 0]} center distanceFactor={10}>
+          <Html position={[0.175, 1.65, 0]} center distanceFactor={10}>
             <div className="bg-slate-900/90 text-white text-[9px] font-mono px-1 py-0.5 rounded whitespace-nowrap">
               Cathode (−)
             </div>

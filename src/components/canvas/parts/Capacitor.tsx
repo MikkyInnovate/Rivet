@@ -3,6 +3,11 @@ import React from "react";
 import { useSceneStore, SceneNode } from "@/store/useSceneStore";
 import { Edges, Html } from "@react-three/drei";
 
+const LEAD_MAT = <meshStandardMaterial color="#b8bcc4" metalness={0.9} roughness={0.25} />;
+
+// Radial electrolytic capacitor: dark blue can with a crimp ring near the
+// base, a light stripe marking the negative side, scored aluminium top, and
+// two legs one hole-pitch apart (negative leg under the stripe).
 export default function Capacitor({ node }: { node: SceneNode }) {
   const selectedNodeId = useSceneStore((s) => s.selectedNodeId);
   const selectNode = useSceneStore((s) => s.selectNode);
@@ -18,38 +23,52 @@ export default function Capacitor({ node }: { node: SceneNode }) {
         selectNode(node.id);
       }}
     >
-      {/* Electrolytic cap body */}
-      <mesh position={[0, 1.2, 0]} castShadow>
-        <cylinderGeometry args={[0.3, 0.3, 1.2, 16]} />
-        <meshStandardMaterial color="#1e40af" roughness={0.5} metalness={0.2} />
-        {isSelected && <Edges color="#2563EB" scale={1.05} />}
+      {/* Legs (one pitch apart; + is longer, like real hardware) */}
+      <mesh position={[-0.175, 0.25, 0]}>
+        <cylinderGeometry args={[0.018, 0.018, 0.5]} />
+        {LEAD_MAT}
+      </mesh>
+      <mesh position={[0.175, 0.22, 0]}>
+        <cylinderGeometry args={[0.018, 0.018, 0.44]} />
+        {LEAD_MAT}
       </mesh>
 
-      {/* Top cap */}
-      <mesh position={[0, 1.85, 0]}>
-        <cylinderGeometry args={[0.28, 0.28, 0.1, 16]} />
-        <meshStandardMaterial color="#93c5fd" roughness={0.3} metalness={0.5} />
+      {/* Can */}
+      <mesh position={[0, 0.78, 0]} castShadow>
+        <cylinderGeometry args={[0.24, 0.24, 0.62, 24]} />
+        <meshStandardMaterial color="#1e3a8a" roughness={0.35} metalness={0.15} />
+        {isSelected && <Edges color="#2563EB" scale={1.06} />}
       </mesh>
 
-      {/* Polarity stripe */}
-      <mesh position={[0.31, 1.2, 0]} rotation={[0, 0, 0]}>
-        <boxGeometry args={[0.02, 1.0, 0.3]} />
-        <meshStandardMaterial color="#bfdbfe" />
+      {/* Crimp ring near the base */}
+      <mesh position={[0, 0.55, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.235, 0.02, 10, 28]} />
+        <meshStandardMaterial color="#172d6e" roughness={0.4} />
       </mesh>
 
-      {/* Legs */}
-      <mesh position={[-0.1, 0.3, 0]}>
-        <cylinderGeometry args={[0.02, 0.02, 0.6]} />
-        <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.2} />
+      {/* Negative-side stripe (over the cathode leg, +x side) */}
+      <mesh position={[0, 0.78, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <cylinderGeometry args={[0.242, 0.242, 0.58, 24, 1, true, -0.22, 0.44]} />
+        <meshStandardMaterial color="#dbe3ee" roughness={0.5} side={2} />
       </mesh>
-      <mesh position={[0.1, 0.25, 0]}>
-        <cylinderGeometry args={[0.02, 0.02, 0.5]} />
-        <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.2} />
+
+      {/* Aluminium top with score cross */}
+      <mesh position={[0, 1.095, 0]}>
+        <cylinderGeometry args={[0.235, 0.235, 0.035, 24]} />
+        <meshStandardMaterial color="#cdd3da" metalness={0.85} roughness={0.35} />
+      </mesh>
+      <mesh position={[0, 1.115, 0]}>
+        <boxGeometry args={[0.4, 0.006, 0.03]} />
+        <meshStandardMaterial color="#9aa1a9" metalness={0.8} roughness={0.4} />
+      </mesh>
+      <mesh position={[0, 1.115, 0]}>
+        <boxGeometry args={[0.03, 0.006, 0.4]} />
+        <meshStandardMaterial color="#9aa1a9" metalness={0.8} roughness={0.4} />
       </mesh>
 
       {/* Label */}
       {showLabels && (
-        <Html position={[0, 2.2, 0]} center distanceFactor={10}>
+        <Html position={[0, 1.5, 0]} center distanceFactor={10}>
           <div className="bg-slate-900/90 text-white text-[9px] font-mono px-1.5 py-0.5 rounded whitespace-nowrap">
             {capacitance}µF
           </div>
@@ -57,8 +76,8 @@ export default function Capacitor({ node }: { node: SceneNode }) {
       )}
 
       {/* Hitbox */}
-      <mesh visible={false}>
-        <boxGeometry args={[0.8, 2, 0.8]} />
+      <mesh visible={false} position={[0, 0.6, 0]}>
+        <boxGeometry args={[0.6, 1.3, 0.6]} />
       </mesh>
     </group>
   );

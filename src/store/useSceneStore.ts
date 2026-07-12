@@ -123,28 +123,49 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   'Tactile Switch': { state: 'open' },
 };
 
-// Breadboard body is 14 x 0.5 x 4.2 with a 0.35 hole pitch; its top surface
-// sits at boardY + 0.25. Parts dragged over it snap to the hole grid and seat
-// slightly INTO the surface so their leg tips disappear into the holes.
+// Breadboard geometry (see Breadboard.tsx): 0.35 hole pitch, hole columns
+// spanning ±6.125, rows at ±1..±5 pitches (row 0 is the channel — no holes),
+// top surface at boardY + 0.25. Parts seat INTO the surface so leg tips
+// disappear into the holes.
+//
+// Leg alignment: parts are built so their legs sit on the pitch grid.
+// LED/Capacitor legs are ±P/2 from center (one pitch apart), so their CENTER
+// must snap to the half-grid; Resistor legs are ±2P, center snaps on-grid.
 const BOARD_PITCH = 0.35;
 const BOARD_SEAT_Y = 0.44;
+const BOARD_COL_MAX = 6.125;
+const HALF_SHIFT_TYPES: PartType[] = ['Led', 'Capacitor'];
 
 export function snapPosition(
   nodes: SceneNode[],
-  position: [number, number, number]
+  position: [number, number, number],
+  type: PartType
 ): [number, number, number] {
-  const breadboard = nodes.find((n) => n.type === 'Breadboard');
   const [nx, , nz] = position;
 
+  // A battery doesn't plug into a breadboard — it lives on the bench.
+  if (type === 'Battery' || type === 'Breadboard' || type === 'Wire') {
+    return [nx, type === 'Breadboard' ? 0.25 : 0, nz];
+  }
+
+  const breadboard = nodes.find((n) => n.type === 'Breadboard');
   if (breadboard) {
     const [bx, , bz] = breadboard.position;
-    if (Math.abs(nx - bx) < 7 && Math.abs(nz - bz) < 2.1) {
-      const snapX = Math.round((nx - bx) / BOARD_PITCH) * BOARD_PITCH + bx;
-      const snapZ = Math.round((nz - bz) / BOARD_PITCH) * BOARD_PITCH + bz;
-      return [snapX, BOARD_SEAT_Y, snapZ];
+    const dx = nx - bx;
+    const dz = nz - bz;
+    if (Math.abs(dx) < 6.6 && Math.abs(dz) < 2.0) {
+      const P = BOARD_PITCH;
+      const shift = HALF_SHIFT_TYPES.includes(type) ? 0.5 : 0;
+      let x = (Math.round(dx / P - shift) + shift) * P;
+      x = Math.max(-BOARD_COL_MAX + shift * P, Math.min(BOARD_COL_MAX - shift * P, x));
+
+      let row = Math.round(dz / P);
+      if (row === 0) row = dz >= 0 ? 1 : -1; // channel has no holes
+      row = Math.max(-5, Math.min(5, row));
+
+      return [x + bx, BOARD_SEAT_Y, row * P + bz];
     }
   }
-  // Off the board: rest on the ground plane.
   return [nx, 0, nz];
 }
 
@@ -273,7 +294,7 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     state.pushHistory();
     let spawnPos = (position || [(Math.random() - 0.5) * 4, type === 'Breadboard' ? 0.25 : 0, (Math.random() - 0.5) * 4]) as [number, number, number];
     // Parts dropped over the board seat straight into the holes.
-    if (type !== 'Breadboard') spawnPos = snapPosition(state.nodes, spawnPos);
+    spawnPos = snapPosition(state.nodes, spawnPos, type);
     const newNode: SceneNode = {
       id: uuidv4(),
       type,
@@ -303,7 +324,8 @@ export const useSceneStore = create<SceneState>((set, get) => ({
 
   updateNodePosition: (id, position) => {
     const { nodes } = get();
-    const finalPos = snapPosition(nodes, position);
+    const target = nodes.find((n) => n.id === id);
+    const finalPos = target ? snapPosition(nodes, position, target.type) : position;
     set((state) => ({
       nodes: state.nodes.map((n) =>
         n.id === id ? { ...n, position: finalPos } : n
