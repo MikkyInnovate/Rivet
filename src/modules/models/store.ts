@@ -10,6 +10,7 @@ const generateId = () => Date.now().toString(36) + Math.random().toString(36).su
 export const useStore = create<AppState>((set, get) => ({
   models: [],
   currentModel: null,
+  hasLoaded: false,
   isGenerating: false,
   viewMode: 'assembled',
   unit: 'mm',
@@ -32,6 +33,35 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
 
+  deleteModel: (id) => {
+    set((state) => {
+        const newModels = state.models.filter((m) => m.id !== id);
+        idbSet(DB_KEY, newModels).catch(console.error);
+        return {
+            models: newModels,
+            currentModel: state.currentModel?.id === id ? null : state.currentModel,
+        };
+    });
+  },
+
+  renameModel: (id, name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    set((state) => {
+        const newModels = state.models.map((m) =>
+            m.id === id ? { ...m, name: trimmed } : m
+        );
+        idbSet(DB_KEY, newModels).catch(console.error);
+        return {
+            models: newModels,
+            currentModel:
+                state.currentModel?.id === id
+                    ? { ...state.currentModel, name: trimmed }
+                    : state.currentModel,
+        };
+    });
+  },
+
   setViewMode: (mode) => set({ viewMode: mode }),
   
   setUnit: (unit) => set({ unit }),
@@ -48,6 +78,8 @@ export const useStore = create<AppState>((set, get) => ({
       }
     } catch (e) {
       console.error("Failed to load history", e);
+    } finally {
+      set({ hasLoaded: true });
     }
   },
 

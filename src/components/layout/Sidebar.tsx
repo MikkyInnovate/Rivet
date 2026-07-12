@@ -14,7 +14,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
-import { useStore } from "@/modules/mechanical/store";
+import { useStore } from "@/modules/models/store";
 
 const COLLAPSED_KEY = "graphite_sidebar_collapsed";
 

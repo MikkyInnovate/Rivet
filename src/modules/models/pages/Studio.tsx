@@ -15,7 +15,7 @@ import { Unit } from '../types';
 export const Studio = () => {
   const { id } = useParams<{ id: string }>();
   const {
-    models, currentModel, setCurrentModel,
+    models, hasLoaded, currentModel, setCurrentModel,
     viewMode, setViewMode,
     unit, setUnit,
     wireframe, toggleWireframe,
@@ -289,6 +289,26 @@ export const Studio = () => {
       setIsExporting(false);
     }
   };
+
+  // Models loaded but this id doesn't exist — say so instead of spinning forever.
+  if (!currentModel && hasLoaded && !models.some((m) => m.id === id)) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-stone-50 p-6">
+        <div className="bg-white border border-stone-200 rounded-xl p-8 max-w-md text-center shadow-sm">
+          <h2 className="text-lg font-bold text-stone-900 mb-1">Model not found</h2>
+          <p className="text-sm text-stone-500 mb-6">
+            This model doesn&apos;t exist — it may have been deleted, or the link is wrong.
+          </p>
+          <Link
+            href="/models"
+            className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
+          >
+            Back to models
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentModel) return (
     <div className="h-screen flex items-center justify-center bg-stone-50">

@@ -5,7 +5,7 @@ import React from "react";
 // History reads local IndexedDB, so keep it client-only. Navigation is owned by
 // the global studio sidebar, so no per-page top bar here.
 const History = dynamic(
-  () => import("@/modules/mechanical/pages/History").then((m) => ({ default: m.History })),
+  () => import("@/modules/models/pages/History").then((m) => ({ default: m.History })),
   {
     ssr: false,
     loading: () => (

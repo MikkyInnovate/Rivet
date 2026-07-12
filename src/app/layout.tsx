@@ -28,6 +28,8 @@ export const metadata: Metadata = {
 };
 
 import Sidebar from "@/components/layout/Sidebar";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Toaster } from "@/components/ui/toast";
 
 export default function RootLayout({
   children,
@@ -42,8 +44,9 @@ export default function RootLayout({
       <body className="min-h-screen w-screen flex bg-white overflow-hidden">
         <Sidebar />
         <main className="flex-1 flex flex-col min-w-0 relative overflow-hidden">
-          {children}
+          <ErrorBoundary>{children}</ErrorBoundary>
         </main>
+        <Toaster />
       </body>
     </html>
   );

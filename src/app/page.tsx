@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Zap, Box, ArrowRight, Plus, Clock, CircuitBoard } from "lucide-react";
-import { useStore } from "@/modules/mechanical/store";
+import { useStore } from "@/modules/models/store";
 import { CIRCUIT_STORAGE_KEY, SavedCircuit } from "@/store/useSceneStore";
-import { DocumentPreview } from "@/modules/mechanical/components/DocumentPreview";
+import { DocumentPreview } from "@/modules/models/components/DocumentPreview";
 
 function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generate3DModel } from "@/modules/mechanical/services/geminiService";
+import { generate3DModel } from "@/modules/models/services/geminiService";
 
 // Runs server-side only. The Gemini API key is read from a server-only env var
 // (GEMINI_API_KEY) and is never sent to the browser.

@@ -4,7 +4,7 @@ import React from "react";
 
 // Camera + getUserMedia: browser-only, so disable SSR.
 const Scan = dynamic(
-  () => import("@/modules/mechanical/pages/Scan").then((m) => ({ default: m.Scan })),
+  () => import("@/modules/models/pages/Scan").then((m) => ({ default: m.Scan })),
   {
     ssr: false,
     loading: () => (

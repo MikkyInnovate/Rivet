@@ -5,7 +5,7 @@ import React from "react";
 // three.js + jsPDF: browser-only, so disable SSR. Studio reads the [id] param
 // via next/navigation's useParams internally.
 const Studio = dynamic(
-  () => import("@/modules/mechanical/pages/Studio").then((m) => ({ default: m.Studio })),
+  () => import("@/modules/models/pages/Studio").then((m) => ({ default: m.Studio })),
   {
     ssr: false,
     loading: () => (

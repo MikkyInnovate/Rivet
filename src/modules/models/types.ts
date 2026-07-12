@@ -24,6 +24,7 @@ export interface CSGModel {
 export interface AppState {
   models: CSGModel[];
   currentModel: CSGModel | null;
+  hasLoaded: boolean;
   isGenerating: boolean;
   viewMode: ViewMode;
   unit: Unit;
@@ -31,6 +32,8 @@ export interface AppState {
   showDimensions: boolean;
   addModel: (model: CSGModel) => void;
   setCurrentModel: (id: string) => void;
+  deleteModel: (id: string) => void;
+  renameModel: (id: string, name: string) => void;
   setViewMode: (mode: ViewMode) => void;
   setUnit: (unit: Unit) => void;
   toggleWireframe: () => void;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateTutorReply } from "@/modules/mechanical/services/geminiService";
+import { generateTutorReply } from "@/modules/models/services/geminiService";
 
 // Runs server-side only. Keeps the Gemini API key off the client and holds no
 // per-user session state — the client sends the transcript on each request.
