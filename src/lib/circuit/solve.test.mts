@@ -1,0 +1,158 @@
+/**
+ * Physics verification for the series-circuit solver.
+ * Every expected value below is hand-calculated from
+ *   I = (V_batt − ΣV_led) / (ΣR + 0.5Ω internal)
+ * Run: node src/lib/circuit/solve.test.mts   (Node 24 strips types natively)
+ */
+import { solveCircuit } from "./solve.ts";
+
+let failures = 0;
+function check(name: string, actual: unknown, expected: unknown) {
+  const a = typeof actual === "number" ? actual.toPrecision(4) : actual;
+  const e = typeof expected === "number" ? expected.toPrecision(4) : expected;
+  if (a === e) {
+    console.log(`  PASS  ${name}  (${a})`);
+  } else {
+    failures++;
+    console.error(`  FAIL  ${name}  expected ${e}, got ${a}`);
+  }
+}
+
+const battery = (v = 9) => ({ id: "bat", type: "Battery", properties: { voltage: v } });
+const resistor = (id: string, ohms: number) => ({ id, type: "Resistor", properties: { resistance: ohms } });
+const led = (id = "led1") => ({ id, type: "Led", properties: { color: "Red" } });
+const wire = (a: string, ap: string, b: string, bp: string) => ({
+  sourceNodeId: a, sourcePin: ap, targetNodeId: b, targetPin: bp,
+});
+
+console.log("1) 9V battery + 470Ω + LED (closed loop)");
+console.log("   hand calc: I = (9 − 2) / (470 + 0.5) = 7 / 470.5 = 14.878 mA → LED on");
+{
+  const r = solveCircuit(
+    [battery(), resistor("r1", 470), led()],
+    [
+      wire("bat", "pos", "r1", "a"),
+      wire("r1", "b", "led1", "anode"),
+      wire("led1", "cathode", "bat", "neg"),
+    ]
+  );
+  check("status", r.status, "ok");
+  check("current (A)", r.currentA, 7 / 470.5);
+  check("LED state", r.ledStates["led1"], "on");
+}
+
+console.log("2) Same loop with the LED flipped (reverse-biased)");
+console.log("   hand calc: diode blocks → I = 0, LED 'reversed'");
+{
+  const r = solveCircuit(
+    [battery(), resistor("r1", 470), led()],
+    [
+      wire("bat", "pos", "r1", "a"),
+      wire("r1", "b", "led1", "cathode"),
+      wire("led1", "anode", "bat", "neg"),
+    ]
+  );
+  check("status", r.status, "ok");
+  check("current (A)", r.currentA, 0);
+  check("LED state", r.ledStates["led1"], "reversed");
+}
+
+console.log("3) Open circuit (last wire missing)");
+{
+  const r = solveCircuit(
+    [battery(), resistor("r1", 470), led()],
+    [wire("bat", "pos", "r1", "a"), wire("r1", "b", "led1", "anode")]
+  );
+  check("status", r.status, "open");
+  check("current (A)", r.currentA, 0);
+  check("LED state", r.ledStates["led1"], "off");
+}
+
+console.log("4) LED with NO resistor (over-current)");
+console.log("   hand calc: I = (9 − 2) / 0.5 = 14 A → LED 'over'");
+{
+  const r = solveCircuit(
+    [battery(), led()],
+    [wire("bat", "pos", "led1", "anode"), wire("led1", "cathode", "bat", "neg")]
+  );
+  check("status", r.status, "ok");
+  check("current (A)", r.currentA, 14);
+  check("LED state", r.ledStates["led1"], "over");
+}
+
+console.log("5) Two resistors in series (470Ω + 220Ω)");
+console.log("   hand calc: I = 7 / 690.5 = 10.138 mA → LED on");
+{
+  const r = solveCircuit(
+    [battery(), resistor("r1", 470), resistor("r2", 220), led()],
+    [
+      wire("bat", "pos", "r1", "a"),
+      wire("r1", "b", "r2", "a"),
+      wire("r2", "b", "led1", "anode"),
+      wire("led1", "cathode", "bat", "neg"),
+    ]
+  );
+  check("status", r.status, "ok");
+  check("current (A)", r.currentA, 7 / 690.5);
+}
+
+console.log("6) Parallel resistors → honestly unsupported (no fake numbers)");
+{
+  const r = solveCircuit(
+    [battery(), resistor("r1", 470), resistor("r2", 220)],
+    [
+      wire("bat", "pos", "r1", "a"),
+      wire("bat", "pos", "r2", "a"),
+      wire("r1", "b", "bat", "neg"),
+      wire("r2", "b", "bat", "neg"),
+    ]
+  );
+  check("status", r.status, "unsupported");
+}
+
+console.log("7) 3V battery + LED + 470Ω: barely conducts");
+console.log("   hand calc: I = (3 − 2) / 470.5 = 2.125 mA → LED on (dim but ≥1mA)");
+{
+  const r = solveCircuit(
+    [battery(3), resistor("r1", 470), led()],
+    [
+      wire("bat", "pos", "r1", "a"),
+      wire("r1", "b", "led1", "anode"),
+      wire("led1", "cathode", "bat", "neg"),
+    ]
+  );
+  check("current (A)", r.currentA, 1 / 470.5);
+  check("LED state", r.ledStates["led1"], "on");
+}
+
+console.log("8) 1.5V battery + LED: below forward voltage → no conduction");
+{
+  const r = solveCircuit(
+    [battery(1.5), resistor("r1", 100), led()],
+    [
+      wire("bat", "pos", "r1", "a"),
+      wire("r1", "b", "led1", "anode"),
+      wire("led1", "cathode", "bat", "neg"),
+    ]
+  );
+  check("current (A)", r.currentA, 0);
+  check("LED state", r.ledStates["led1"], "off");
+}
+
+console.log("9) No battery");
+{
+  const r = solveCircuit([resistor("r1", 470), led()], [wire("r1", "b", "led1", "anode")]);
+  check("status", r.status, "no-battery");
+}
+
+console.log("10) Battery terminals wired directly together");
+{
+  const r = solveCircuit([battery()], [wire("bat", "pos", "bat", "neg")]);
+  check("status", r.status, "unsupported");
+}
+
+if (failures > 0) {
+  console.error(`\n${failures} FAILURE(S)`);
+  process.exit(1);
+}
+console.log("\nALL PHYSICS TESTS PASSED");

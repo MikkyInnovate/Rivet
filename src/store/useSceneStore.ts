@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
+import { solveCircuit, SolveResult } from '@/lib/circuit/solve';
+import { getPins } from '@/lib/circuit/pins';
+import { toast } from '@/components/ui/toast';
 
 export type PartType =
   | 'Battery'
@@ -48,8 +51,14 @@ interface SceneState {
   // Simulation
   isSimulating: boolean;
   simulationTime: number;
+  simulation: SolveResult | null;
   showLabels: boolean;
   showVoltages: boolean;
+
+  // Wiring (pin-to-pin)
+  pendingPin: { nodeId: string; pinId: string } | null;
+  connectPin: (nodeId: string, pinId: string) => void;
+  cancelWiring: () => void;
 
   // Project info
   projectName: string;
@@ -138,11 +147,60 @@ export const useSceneStore = create<SceneState>((set, get) => ({
   selectedWireId: null,
   isSimulating: false,
   simulationTime: 0,
+  simulation: null,
   showLabels: false,
   showVoltages: false,
   projectName: 'Untitled',
   undoStack: [],
   redoStack: [],
+  pendingPin: null,
+
+  connectPin: (nodeId, pinId) => {
+    const { pendingPin, wires, nodes } = get();
+    if (!pendingPin) {
+      set({ pendingPin: { nodeId, pinId } });
+      return;
+    }
+    // Clicking the armed pin again cancels.
+    if (pendingPin.nodeId === nodeId && pendingPin.pinId === pinId) {
+      set({ pendingPin: null });
+      return;
+    }
+    if (pendingPin.nodeId === nodeId) {
+      toast("Can't wire a part to itself", 'error');
+      set({ pendingPin: null });
+      return;
+    }
+    const duplicate = wires.some(
+      (w) =>
+        (w.sourceNodeId === pendingPin.nodeId && w.sourcePin === pendingPin.pinId &&
+         w.targetNodeId === nodeId && w.targetPin === pinId) ||
+        (w.targetNodeId === pendingPin.nodeId && w.targetPin === pendingPin.pinId &&
+         w.sourceNodeId === nodeId && w.sourcePin === pinId)
+    );
+    if (duplicate) {
+      toast('These pins are already connected', 'error');
+      set({ pendingPin: null });
+      return;
+    }
+    get().addWire({
+      sourceNodeId: pendingPin.nodeId,
+      sourcePin: pendingPin.pinId,
+      targetNodeId: nodeId,
+      targetPin: pinId,
+      color: 'Red',
+      height: 'Low',
+      showCurrent: false,
+    });
+    set({ pendingPin: null });
+    // Re-solve live if simulation is running.
+    if (get().isSimulating) {
+      set({ simulation: solveCircuit(get().nodes, get().wires) });
+    }
+    void nodes;
+  },
+
+  cancelWiring: () => set({ pendingPin: null }),
 
   hydrateFromStorage: () => {
     try {
@@ -297,11 +355,20 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       ),
     })),
 
-  toggleSimulation: () =>
-    set((state) => ({
-      isSimulating: !state.isSimulating,
-      simulationTime: state.isSimulating ? state.simulationTime : 0,
-    })),
+  toggleSimulation: () => {
+    const starting = !get().isSimulating;
+    if (starting) {
+      const result = solveCircuit(get().nodes, get().wires);
+      set({ isSimulating: true, simulationTime: 0, simulation: result, pendingPin: null });
+      if (result.status !== 'ok' || result.currentA === 0) {
+        toast(result.message, 'error');
+      } else {
+        toast(result.message);
+      }
+    } else {
+      set({ isSimulating: false, simulation: null });
+    }
+  },
 
   tickSimulation: (deltaTime) =>
     set((state) => {
@@ -353,6 +420,22 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     });
   },
 }));
+
+// While the simulation is running, re-solve whenever the circuit itself
+// changes (parts added/removed, wires changed, properties edited) so the
+// readout is always truthful. Reference-compare to avoid feedback loops.
+if (typeof window !== 'undefined') {
+  let lastNodes = useSceneStore.getState().nodes;
+  let lastWires = useSceneStore.getState().wires;
+  useSceneStore.subscribe((state) => {
+    if (state.nodes === lastNodes && state.wires === lastWires) return;
+    lastNodes = state.nodes;
+    lastWires = state.wires;
+    if (state.isSimulating) {
+      useSceneStore.setState({ simulation: solveCircuit(state.nodes, state.wires) });
+    }
+  });
+}
 
 // Auto-save the circuit (scene data only — not selection/undo) to localStorage,
 // debounced so rapid edits don't thrash storage.

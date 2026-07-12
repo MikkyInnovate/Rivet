@@ -16,7 +16,7 @@ const COLOR_MAP: Record<string, string> = {
 export default function LED({ node }: { node: SceneNode }) {
   const selectedNodeId = useSceneStore((s) => s.selectedNodeId);
   const selectNode = useSceneStore((s) => s.selectNode);
-  const isSimulating = useSceneStore((s) => s.isSimulating);
+  const simulation = useSceneStore((s) => s.simulation);
   const showLabels = useSceneStore((s) => s.showLabels);
 
   const isSelected = selectedNodeId === node.id;
@@ -27,18 +27,28 @@ export default function LED({ node }: { node: SceneNode }) {
   const baseRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.PointLight>(null);
 
-  // Animate glow when simulating
-  useFrame((_, delta) => {
+  // Glow follows the SOLVED circuit, not the Simulate button: off when the
+  // loop is open or the LED is reversed, lit when current actually flows,
+  // and a harsh flicker when over-current (no resistor).
+  const ledState = simulation?.ledStates[node.id] ?? "off";
+
+  useFrame((state, delta) => {
     if (!bulbRef.current || !baseRef.current) return;
     const mat = bulbRef.current.material as THREE.MeshStandardMaterial;
     const baseMat = baseRef.current.material as THREE.MeshStandardMaterial;
-    const targetIntensity = isSimulating ? 3 : 0;
-    const current = mat.emissiveIntensity;
-    const lerped = THREE.MathUtils.lerp(current, targetIntensity, delta * 5);
+
+    let targetIntensity = 0;
+    if (ledState === "on") targetIntensity = 3;
+    if (ledState === "over") {
+      // Distressed flicker: something is wrong and it should look wrong.
+      targetIntensity = 5 + Math.sin(state.clock.elapsedTime * 40) * 1.5;
+    }
+
+    const lerped = THREE.MathUtils.lerp(mat.emissiveIntensity, targetIntensity, delta * 5);
     mat.emissiveIntensity = lerped;
     baseMat.emissiveIntensity = lerped;
     if (glowRef.current) {
-      glowRef.current.intensity = isSimulating ? 2 : 0;
+      glowRef.current.intensity = ledState === "over" ? 4 : ledState === "on" ? 2 : 0;
     }
   });
 

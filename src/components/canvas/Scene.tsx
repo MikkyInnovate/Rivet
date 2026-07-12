@@ -10,6 +10,8 @@ import LED from "./parts/LED";
 import Resistor from "./parts/Resistor";
 import Capacitor from "./parts/Capacitor";
 import Wire from "./parts/Wire";
+import Pins from "./Pins";
+import { pinWorldPosition } from "@/lib/circuit/pins";
 
 function SimulationEngine() {
   const isSimulating = useSceneStore((s) => s.isSimulating);
@@ -88,72 +90,10 @@ function PartRenderer({ node }: { node: SceneNode }) {
     >
       <group position={node.position}>
         {renderItem()}
+        <Pins node={node} />
       </group>
     </PivotControls>
   ) as unknown as React.ReactNode;
-}
-
-function DefaultWires() {
-  const nodes = useSceneStore((s) => s.nodes);
-
-  // Find default battery and breadboard to draw wires between them
-  const battery = nodes.find((n) => n.id === "default-battery");
-  const breadboard = nodes.find((n) => n.id === "default-breadboard");
-
-  if (!battery || !breadboard) return null;
-
-  // Battery terminal positions (world space)
-  const batteryX = battery.position[0];
-  const batteryY = battery.position[1];
-  const batteryZ = battery.position[2];
-
-  // Breadboard world position
-  const bbX = breadboard.position[0];
-  const bbY = breadboard.position[1];
-  const bbZ = breadboard.position[2];
-
-  // Red wire: battery + terminal (left, -0.25) → breadboard top red rail
-  const redWireStart: [number, number, number] = [
-    batteryX - 0.25,
-    batteryY + 2.825,
-    batteryZ,
-  ];
-  const redWireEnd: [number, number, number] = [
-    bbX + 4.5,
-    bbY + 0.5,
-    bbZ - 1.55,
-  ];
-
-  // Black wire: battery - terminal (right, +0.25) → breadboard top blue rail
-  const blackWireStart: [number, number, number] = [
-    batteryX + 0.25,
-    batteryY + 2.825,
-    batteryZ,
-  ];
-  const blackWireEnd: [number, number, number] = [
-    bbX + 4.1,
-    bbY + 0.5,
-    bbZ - 1.25,
-  ];
-
-  return (
-    <>
-      <Wire 
-        id="default-red"
-        start={redWireStart} 
-        end={redWireEnd} 
-        color="#ef4444" 
-        arcHeight={1.8} 
-      />
-      <Wire 
-        id="default-black"
-        start={blackWireStart} 
-        end={blackWireEnd} 
-        color="#1a1a1a" 
-        arcHeight={2.2} 
-      />
-    </>
-  );
 }
 
 export default function Scene() {
@@ -237,17 +177,19 @@ export default function Scene() {
         const targetNode = nodes.find((n) => n.id === wire.targetNodeId);
         if (!sourceNode || !targetNode) return null;
 
-        const start: [number, number, number] = [
-          sourceNode.position[0],
-          sourceNode.position[1] + (sourceNode.type === 'Battery' ? 2.825 : 0.5),
-          sourceNode.position[2]
-        ];
-        
-        const end: [number, number, number] = [
-          targetNode.position[0],
-          targetNode.position[1] + (targetNode.type === 'Breadboard' ? 0.25 : 0.5),
-          targetNode.position[2]
-        ];
+        const start: [number, number, number] =
+          pinWorldPosition(sourceNode, wire.sourcePin) ?? [
+            sourceNode.position[0],
+            sourceNode.position[1] + 0.5,
+            sourceNode.position[2],
+          ];
+
+        const end: [number, number, number] =
+          pinWorldPosition(targetNode, wire.targetPin) ?? [
+            targetNode.position[0],
+            targetNode.position[1] + 0.5,
+            targetNode.position[2],
+          ];
 
         const arcHt = wire.height === 'High' ? 6 : wire.height === 'Medium' ? 4 : 2;
 
@@ -268,8 +210,6 @@ export default function Scene() {
         );
       })}
 
-      {/* Default wires connecting battery to breadboard */}
-      <DefaultWires />
 
       <OrbitControls
         makeDefault

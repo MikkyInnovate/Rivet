@@ -134,7 +134,9 @@ function ProjectDropdown() {
 export default function Navbar() {
   const isSimulating = useSceneStore((s) => s.isSimulating);
   const toggleSimulation = useSceneStore((s) => s.toggleSimulation);
-  const simulationTime = useSceneStore((s) => s.simulationTime);
+  const simulation = useSceneStore((s) => s.simulation);
+  const pendingPin = useSceneStore((s) => s.pendingPin);
+  const cancelWiring = useSceneStore((s) => s.cancelWiring);
   const undo = useSceneStore((s) => s.undo);
   const redo = useSceneStore((s) => s.redo);
   const deleteSelectedNode = useSceneStore((s) => s.deleteSelectedNode);
@@ -153,12 +155,14 @@ export default function Navbar() {
         } else {
           undo();
         }
+      } else if (e.key === "Escape") {
+        cancelWiring();
       } else if ((e.key === "Delete" || e.key === "Backspace") && !typing) {
         deleteSelectedNode();
         deleteSelectedWire();
       }
     },
-    [undo, redo, deleteSelectedNode, deleteSelectedWire]
+    [undo, redo, deleteSelectedNode, deleteSelectedWire, cancelWiring]
   );
 
   useEffect(() => {
@@ -186,10 +190,28 @@ export default function Navbar() {
       {/* Center: Project name dropdown */}
       <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center">
         <ProjectDropdown />
-        {isSimulating && (
-          <div className="mt-0.5 bg-slate-900 text-white font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1.5 tracking-wider">
-            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            Clock: {simulationTime.toFixed(2)}s
+        {pendingPin && (
+          <div className="mt-0.5 bg-teal-600 text-white font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1.5 tracking-wider">
+            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            Click another pin to wire — Esc to cancel
+          </div>
+        )}
+        {!pendingPin && isSimulating && simulation && (
+          <div
+            className={`mt-0.5 font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1.5 tracking-wider text-white ${
+              simulation.status === "ok" && simulation.currentA > 0
+                ? "bg-slate-900"
+                : "bg-amber-600"
+            }`}
+          >
+            <div
+              className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                simulation.status === "ok" && simulation.currentA > 0
+                  ? "bg-teal-400"
+                  : "bg-white"
+              }`}
+            />
+            {simulation.message}
           </div>
         )}
       </div>
