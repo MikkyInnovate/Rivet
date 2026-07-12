@@ -67,7 +67,7 @@ export const Scan = () => {
   const handleProcess = async (base64: string) => {
     try {
       const id = await generateModel(base64);
-      router.push(`/mechanical/studio/${id}`);
+      router.push(`/models/${id}`);
     } catch (err: any) {
       setError(err.message || "CAD extraction failed. Check lighting and clarity.");
     }

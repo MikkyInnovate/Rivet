@@ -46,14 +46,14 @@ export const Landing = () => {
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Link
-                  href="/mechanical/scan"
+                  href="/models/new"
                   className="inline-flex items-center justify-center gap-2 bg-amber-700 hover:bg-amber-800 text-white text-base md:text-lg font-bold px-8 py-4 rounded-lg shadow-xl shadow-amber-700/20 transition-all hover:scale-105"
                 >
                   Start Scanning
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link
-                  href="/mechanical/history"
+                  href="/models"
                   className="inline-flex items-center justify-center gap-2 bg-white hover:bg-stone-50 text-stone-900 text-base md:text-lg font-bold px-8 py-4 rounded-lg border-2 border-stone-300 transition-all hover:border-amber-700"
                 >
                   View Examples

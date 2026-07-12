@@ -302,7 +302,7 @@ export const Studio = () => {
   return (
     <div className="h-screen bg-stone-50 flex flex-col md:flex-row overflow-hidden">
       <div className="md:hidden absolute top-0 left-0 right-0 p-4 z-50 flex justify-between pointer-events-none">
-        <Link href="/mechanical/history" className="pointer-events-auto bg-white p-2 rounded-full shadow border">
+        <Link href="/models" className="pointer-events-auto bg-white p-2 rounded-full shadow border">
           <ChevronLeft className="w-6 h-6 text-slate-700" />
         </Link>
       </div>

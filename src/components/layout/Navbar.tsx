@@ -257,7 +257,7 @@ export default function Navbar() {
             </div>
           </div>
           <h1 className="font-mono font-bold text-slate-800 text-lg tracking-tight">
-            Electrical Lab
+            Circuits
           </h1>
         </div>
       </div>

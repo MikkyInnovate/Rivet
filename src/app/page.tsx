@@ -49,7 +49,7 @@ export default function HomePage() {
         {/* Create actions */}
         <div className="grid sm:grid-cols-2 gap-4 mb-10">
           <Link
-            href="/electrical"
+            href="/circuits"
             className="group bg-white rounded-xl border border-slate-200 p-5 flex items-start gap-4 hover:border-teal-400 hover:shadow-md transition-all"
           >
             <div className="w-11 h-11 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
@@ -57,7 +57,7 @@ export default function HomePage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-slate-900 flex items-center gap-2">
-                Electrical Lab
+                Circuits
                 <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-teal-500 group-hover:translate-x-0.5 transition-all" />
               </div>
               <p className="text-sm text-slate-500 mt-1">
@@ -67,7 +67,7 @@ export default function HomePage() {
           </Link>
 
           <Link
-            href="/mechanical/scan"
+            href="/models/new"
             className="group bg-white rounded-xl border border-slate-200 p-5 flex items-start gap-4 hover:border-amber-400 hover:shadow-md transition-all"
           >
             <div className="w-11 h-11 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
@@ -75,11 +75,11 @@ export default function HomePage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-slate-900 flex items-center gap-2">
-                Mechanical Studio
+                Models
                 <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
               </div>
               <p className="text-sm text-slate-500 mt-1">
-                Scan a 2D drawing and generate an interactive 3D model.
+                Turn a 2D engineering drawing into an interactive 3D model.
               </p>
             </div>
           </Link>
@@ -92,7 +92,7 @@ export default function HomePage() {
               Continue where you left off
             </h2>
             <Link
-              href="/electrical"
+              href="/circuits"
               className="group bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4 hover:border-teal-400 hover:shadow-md transition-all max-w-xl"
             >
               <div className="w-10 h-10 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
@@ -118,11 +118,11 @@ export default function HomePage() {
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-400">
-              Recent 3D models
+              Recent models
             </h2>
             {models.length > 0 && (
               <Link
-                href="/mechanical/history"
+                href="/models"
                 className="text-xs font-medium text-slate-500 hover:text-slate-900"
               >
                 View all
@@ -137,10 +137,10 @@ export default function HomePage() {
                 No models yet. Scan an engineering drawing to create your first 3D model.
               </p>
               <Link
-                href="/mechanical/scan"
+                href="/models/new"
                 className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
               >
-                <Plus className="w-4 h-4" /> New scan
+                <Plus className="w-4 h-4" /> New model
               </Link>
             </div>
           ) : (
@@ -148,7 +148,7 @@ export default function HomePage() {
               {models.slice(0, 4).map((m) => (
                 <Link
                   key={m.id}
-                  href={`/mechanical/studio/${m.id}`}
+                  href={`/models/${m.id}`}
                   className="group bg-white rounded-xl border border-slate-200 overflow-hidden hover:border-amber-400 hover:shadow-md transition-all"
                 >
                   <div className="aspect-[4/3] bg-slate-100 overflow-hidden">

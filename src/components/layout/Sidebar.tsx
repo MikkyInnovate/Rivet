@@ -59,18 +59,18 @@ export default function Sidebar() {
       collapsedActiveClass: "bg-slate-100 text-slate-900",
     },
     {
-      name: "Electrical Lab",
-      href: "/electrical",
+      name: "Circuits",
+      href: "/circuits",
       icon: Zap,
-      active: pathname.startsWith("/electrical"),
+      active: pathname.startsWith("/circuits"),
       activeClass: "bg-teal-50 text-teal-700",
       collapsedActiveClass: "bg-teal-50 text-teal-600",
     },
     {
-      name: "Mechanical Studio",
-      href: "/mechanical/history",
+      name: "Models",
+      href: "/models",
       icon: Box,
-      active: pathname.startsWith("/mechanical"),
+      active: pathname.startsWith("/models"),
       activeClass: "bg-amber-50 text-amber-700",
       collapsedActiveClass: "bg-amber-50 text-amber-600",
     },
@@ -196,7 +196,7 @@ export default function Sidebar() {
               >
                 <Icon className="w-[18px] h-[18px]" />
                 {item.name}
-                {item.name === "Mechanical Studio" && models.length > 0 && (
+                {item.name === "Models" && models.length > 0 && (
                   <span
                     className={`ml-auto text-[11px] font-mono px-1.5 py-0.5 rounded ${
                       item.active
@@ -219,11 +219,11 @@ export default function Sidebar() {
             </div>
             <div className="flex flex-col gap-0.5">
               {models.slice(0, 6).map((m) => {
-                const active = pathname === `/mechanical/studio/${m.id}`;
+                const active = pathname === `/models/${m.id}`;
                 return (
                   <Link
                     key={m.id}
-                    href={`/mechanical/studio/${m.id}`}
+                    href={`/models/${m.id}`}
                     className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-colors ${
                       active
                         ? "bg-slate-100 text-slate-900"

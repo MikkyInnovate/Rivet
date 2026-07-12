@@ -17,26 +17,26 @@ export const History = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-start justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-stone-900 mb-2">Mechanical Studio</h1>
-            <p className="text-stone-600">Your scanned drawings and generated 3D models.</p>
+            <h1 className="text-3xl font-bold text-stone-900 mb-2">Models</h1>
+            <p className="text-stone-600">3D models generated from your engineering drawings.</p>
           </div>
           <Link
-            href="/mechanical/scan"
+            href="/models/new"
             className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-bold px-5 py-3 rounded-lg shadow-lg shadow-amber-700/20 transition-all shrink-0"
           >
-            <Plus className="w-5 h-5" /> New Scan
+            <Plus className="w-5 h-5" /> New model
           </Link>
         </div>
 
         {models.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-stone-300">
-            <p className="text-stone-500 mb-4">No scans yet.</p>
-            <Link href="/mechanical/scan" className="text-amber-700 font-medium hover:underline">Create your first scan</Link>
+            <p className="text-stone-500 mb-4">No models yet.</p>
+            <Link href="/models/new" className="text-amber-700 font-medium hover:underline">Scan a drawing to create your first model</Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {models.map((model) => (
-              <Link key={model.id} href={`/mechanical/studio/${model.id}`} className="group bg-white rounded-xl border border-stone-300 overflow-hidden hover:shadow-lg hover:border-amber-700 transition-all">
+              <Link key={model.id} href={`/models/${model.id}`} className="group bg-white rounded-xl border border-stone-300 overflow-hidden hover:shadow-lg hover:border-amber-700 transition-all">
                 <div className="aspect-square bg-stone-100 relative overflow-hidden">
                   <DocumentPreview src={model.originalImage} alt={model.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
