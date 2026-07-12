@@ -60,6 +60,8 @@ function PartRenderer({ node }: { node: SceneNode }) {
     }
   };
 
+  const matrixRef = React.useRef(new THREE.Matrix4());
+
   if (node.type === "Breadboard") return renderItem();
 
   return (
@@ -68,10 +70,13 @@ function PartRenderer({ node }: { node: SceneNode }) {
       depthTest={false}
       anchor={[0, 0, 0]}
       scale={2}
-      onDragEnd={(m: THREE.Matrix4) => {
+      onDrag={(local) => {
+        matrixRef.current.copy(local);
+      }}
+      onDragEnd={() => {
         // Extract translation from matrix
         const position = new THREE.Vector3();
-        position.setFromMatrixPosition(m);
+        position.setFromMatrixPosition(matrixRef.current);
         // PivotControls relative translation + original position
         const newPos: [number, number, number] = [
           node.position[0] + position.x,
