@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useStore } from '../store';
 import Link from 'next/link';
-import { Calendar, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronRight, Plus } from 'lucide-react';
 import { DocumentPreview } from '../components/DocumentPreview';
 
 export const History = () => {
@@ -13,10 +13,20 @@ export const History = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-stone-50 pt-20 pb-24 px-4 md:px-8">
+    <div className="min-h-screen bg-stone-50 pt-8 pb-16 px-4 md:px-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-stone-900 mb-2">Scan History</h1>
-        <p className="text-stone-600 mb-8">Locally stored engineering models.</p>
+        <div className="flex items-start justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-stone-900 mb-2">Mechanical Studio</h1>
+            <p className="text-stone-600">Your scanned drawings and generated 3D models.</p>
+          </div>
+          <Link
+            href="/mechanical/scan"
+            className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-bold px-5 py-3 rounded-lg shadow-lg shadow-amber-700/20 transition-all shrink-0"
+          >
+            <Plus className="w-5 h-5" /> New Scan
+          </Link>
+        </div>
 
         {models.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-stone-300">
