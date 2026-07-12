@@ -13,6 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import { useSceneStore } from "@/store/useSceneStore";
+import { TopBar } from "./TopBar";
 
 function ProjectDropdown() {
   const [open, setOpen] = useState(false);
@@ -245,7 +246,7 @@ export default function Navbar() {
   }, [handleKeydown]);
 
   return (
-    <nav className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-4 z-20 shrink-0 relative">
+    <TopBar>
       {/* Left: Brand + Navigation */}
       <div className="flex items-center gap-4">
         {/* Logo */}
@@ -309,6 +310,6 @@ export default function Navbar() {
           />
         </div>
       </div>
-    </nav>
+    </TopBar>
   );
 }

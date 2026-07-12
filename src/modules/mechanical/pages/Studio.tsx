@@ -1,5 +1,7 @@
+"use client";
 import React, { useEffect, useState, Suspense, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Stage, Grid, Environment, Bounds, useBounds } from '@react-three/drei';
 import { jsPDF } from 'jspdf';
@@ -11,7 +13,7 @@ import { DocumentPreview } from '../components/DocumentPreview';
 import { Unit } from '../types';
 
 export const Studio = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const {
     models, currentModel, setCurrentModel,
     viewMode, setViewMode,
@@ -300,7 +302,7 @@ export const Studio = () => {
   return (
     <div className="h-screen bg-stone-50 flex flex-col md:flex-row overflow-hidden">
       <div className="md:hidden absolute top-0 left-0 right-0 p-4 z-50 flex justify-between pointer-events-none">
-        <Link to="/history" className="pointer-events-auto bg-white p-2 rounded-full shadow border">
+        <Link href="/mechanical/history" className="pointer-events-auto bg-white p-2 rounded-full shadow border">
           <ChevronLeft className="w-6 h-6 text-slate-700" />
         </Link>
       </div>

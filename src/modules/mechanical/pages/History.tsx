@@ -1,6 +1,7 @@
+"use client";
 import React, { useEffect } from 'react';
 import { useStore } from '../store';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Calendar, ChevronRight } from 'lucide-react';
 import { DocumentPreview } from '../components/DocumentPreview';
 
@@ -20,12 +21,12 @@ export const History = () => {
         {models.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-stone-300">
             <p className="text-stone-500 mb-4">No scans yet.</p>
-            <Link to="/scan" className="text-amber-700 font-medium hover:underline">Create your first scan</Link>
+            <Link href="/mechanical/scan" className="text-amber-700 font-medium hover:underline">Create your first scan</Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {models.map((model) => (
-              <Link key={model.id} to={`/studio/${model.id}`} className="group bg-white rounded-xl border border-stone-300 overflow-hidden hover:shadow-lg hover:border-amber-700 transition-all">
+              <Link key={model.id} href={`/mechanical/studio/${model.id}`} className="group bg-white rounded-xl border border-stone-300 overflow-hidden hover:shadow-lg hover:border-amber-700 transition-all">
                 <div className="aspect-square bg-stone-100 relative overflow-hidden">
                   <DocumentPreview src={model.originalImage} alt={model.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
