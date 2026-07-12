@@ -1,8 +1,7 @@
 "use client";
-import React, { Suspense } from "react";
-import * as THREE from "three";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Grid, Environment, PivotControls } from "@react-three/drei";
+import React, { Suspense, useRef, useState } from "react";
+import { Canvas, useFrame, useThree, ThreeEvent } from "@react-three/fiber";
+import { OrbitControls, Grid, Environment } from "@react-three/drei";
 import { useSceneStore, SceneNode, PartType } from "@/store/useSceneStore";
 import Battery from "./parts/Battery";
 import Breadboard from "./parts/Breadboard";
@@ -25,9 +24,22 @@ function SimulationEngine() {
   return null;
 }
 
+/** Intersect the pointer ray with the horizontal plane y=0. */
+function rayToGround(e: ThreeEvent<PointerEvent>): [number, number] {
+  const t = -e.ray.origin.y / e.ray.direction.y;
+  return [
+    e.ray.origin.x + e.ray.direction.x * t,
+    e.ray.origin.z + e.ray.direction.z * t,
+  ];
+}
+
 function PartRenderer({ node }: { node: SceneNode }) {
   const updateNodePosition = useSceneStore((s) => s.updateNodePosition);
-  const isSelected = useSceneStore((s) => s.selectedNodeId === node.id);
+  const selectNode = useSceneStore((s) => s.selectNode);
+  const pushHistory = useSceneStore((s) => s.pushHistory);
+  const controls = useThree((s) => s.controls) as { enabled: boolean } | null;
+  const [dragging, setDragging] = useState(false);
+  const grabOffset = useRef<[number, number]>([0, 0]);
   
   const renderItem = () => {
     switch (node.type) {
@@ -63,49 +75,54 @@ function PartRenderer({ node }: { node: SceneNode }) {
     }
   };
 
-  const matrixRef = React.useRef(new THREE.Matrix4());
-
   if (node.type === "Breadboard") return renderItem();
 
-  // Move gizmo only on the selected part — an always-on gizmo per part turns
-  // the workbench into a debug view. Click a part to select & move it.
-  if (!isSelected) {
-    return (
-      <group position={node.position}>
-        {renderItem()}
-        <Pins node={node} />
-      </group>
-    );
-  }
-
+  // Direct manipulation: grab the part anywhere and drag it across the bench.
+  // The store snaps it into breadboard holes when it's over the board.
   return (
-    <PivotControls
-      activeAxes={[true, false, true]}
-      depthTest={false}
-      anchor={[0, 0, 0]}
-      scale={2}
-      onDrag={(local) => {
-        matrixRef.current.copy(local);
+    <group
+      position={node.position}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        selectNode(node.id);
+        pushHistory(); // one undo step per drag
+        const [gx, gz] = rayToGround(e);
+        grabOffset.current = [node.position[0] - gx, node.position[2] - gz];
+        setDragging(true);
+        (e.target as Element).setPointerCapture(e.pointerId);
+        if (controls) controls.enabled = false;
+        document.body.style.cursor = "grabbing";
       }}
-      onDragEnd={() => {
-        // Extract translation from matrix
-        const position = new THREE.Vector3();
-        position.setFromMatrixPosition(matrixRef.current);
-        // PivotControls relative translation + original position
-        const newPos: [number, number, number] = [
-          node.position[0] + position.x,
-          node.position[1] + position.y,
-          node.position[2] + position.z
-        ];
-        updateNodePosition(node.id, newPos);
+      onPointerMove={(e) => {
+        if (!dragging) return;
+        e.stopPropagation();
+        const [gx, gz] = rayToGround(e);
+        updateNodePosition(node.id, [
+          gx + grabOffset.current[0],
+          0,
+          gz + grabOffset.current[1],
+        ]);
+      }}
+      onPointerUp={(e) => {
+        if (!dragging) return;
+        e.stopPropagation();
+        setDragging(false);
+        (e.target as Element).releasePointerCapture(e.pointerId);
+        if (controls) controls.enabled = true;
+        document.body.style.cursor = "auto";
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        if (!dragging) document.body.style.cursor = "grab";
+      }}
+      onPointerOut={() => {
+        if (!dragging) document.body.style.cursor = "auto";
       }}
     >
-      <group position={node.position}>
-        {renderItem()}
-        <Pins node={node} />
-      </group>
-    </PivotControls>
-  ) as unknown as React.ReactNode;
+      {renderItem()}
+      <Pins node={node} />
+    </group>
+  );
 }
 
 export default function Scene() {

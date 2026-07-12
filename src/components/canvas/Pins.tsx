@@ -30,6 +30,7 @@ export default function Pins({ node }: { node: SceneNode }) {
             {/* Generous invisible hit target; the visible terminal stays small */}
             <mesh
               visible={false}
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
                 connectPin(node.id, pin.id);

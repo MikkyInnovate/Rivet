@@ -123,6 +123,31 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   'Tactile Switch': { state: 'open' },
 };
 
+// Breadboard body is 14 x 0.5 x 4.2 with a 0.35 hole pitch; its top surface
+// sits at boardY + 0.25. Parts dragged over it snap to the hole grid and seat
+// slightly INTO the surface so their leg tips disappear into the holes.
+const BOARD_PITCH = 0.35;
+const BOARD_SEAT_Y = 0.44;
+
+export function snapPosition(
+  nodes: SceneNode[],
+  position: [number, number, number]
+): [number, number, number] {
+  const breadboard = nodes.find((n) => n.type === 'Breadboard');
+  const [nx, , nz] = position;
+
+  if (breadboard) {
+    const [bx, , bz] = breadboard.position;
+    if (Math.abs(nx - bx) < 7 && Math.abs(nz - bz) < 2.1) {
+      const snapX = Math.round((nx - bx) / BOARD_PITCH) * BOARD_PITCH + bx;
+      const snapZ = Math.round((nz - bz) / BOARD_PITCH) * BOARD_PITCH + bz;
+      return [snapX, BOARD_SEAT_Y, snapZ];
+    }
+  }
+  // Off the board: rest on the ground plane.
+  return [nx, 0, nz];
+}
+
 const INITIAL_NODES: SceneNode[] = [
   {
     id: 'default-breadboard',
@@ -246,11 +271,13 @@ export const useSceneStore = create<SceneState>((set, get) => ({
   addNode: (type, position) => {
     const state = get();
     state.pushHistory();
-    const spawnPos = position || [(Math.random() - 0.5) * 4, type === 'Breadboard' ? 0.25 : 0, (Math.random() - 0.5) * 4];
+    let spawnPos = (position || [(Math.random() - 0.5) * 4, type === 'Breadboard' ? 0.25 : 0, (Math.random() - 0.5) * 4]) as [number, number, number];
+    // Parts dropped over the board seat straight into the holes.
+    if (type !== 'Breadboard') spawnPos = snapPosition(state.nodes, spawnPos);
     const newNode: SceneNode = {
       id: uuidv4(),
       type,
-      position: spawnPos as [number, number, number],
+      position: spawnPos,
       rotation: [0, 0, 0],
       properties: { ...(DEFAULT_PROPS[type] || {}) },
     };
@@ -275,24 +302,8 @@ export const useSceneStore = create<SceneState>((set, get) => ({
   },
 
   updateNodePosition: (id, position) => {
-    // Snapping logic if near breadboard
     const { nodes } = get();
-    const breadboard = nodes.find(n => n.type === 'Breadboard');
-    let finalPos = position;
-
-    if (breadboard) {
-      const [bx, , bz] = breadboard.position;
-      const [nx, ny, nz] = position;
-      
-      // If within breadboard bounds (approx 14x4.2)
-      if (Math.abs(nx - bx) < 7 && Math.abs(nz - bz) < 2.1) {
-        // Snap to 0.35 spacing starting from center
-        const snapX = Math.round((nx - bx) / 0.35) * 0.35 + bx;
-        const snapZ = Math.round((nz - bz) / 0.35) * 0.35 + bz;
-        finalPos = [snapX, ny, snapZ];
-      }
-    }
-
+    const finalPos = snapPosition(nodes, position);
     set((state) => ({
       nodes: state.nodes.map((n) =>
         n.id === id ? { ...n, position: finalPos } : n
