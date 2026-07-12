@@ -83,6 +83,7 @@ interface SceneState {
 
   // Persistence
   hydrateFromStorage: () => void;
+  clearCircuit: () => void;
 
   // History
   undo: () => void;
@@ -157,6 +158,19 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     } catch {
       // Corrupt save — start fresh rather than crash.
     }
+  },
+
+  clearCircuit: () => {
+    get().pushHistory();
+    set({
+      nodes: JSON.parse(JSON.stringify(INITIAL_NODES)),
+      wires: [],
+      selectedNodeId: null,
+      selectedWireId: null,
+      projectName: 'Untitled',
+      isSimulating: false,
+      simulationTime: 0,
+    });
   },
 
   pushHistory: () => {

@@ -7,13 +7,10 @@ import {
   Undo2,
   Redo2,
   Trash2,
-  Code2,
-  GitFork,
-  Copy,
-  Check,
 } from "lucide-react";
 import { useSceneStore } from "@/store/useSceneStore";
 import { TopBar } from "./TopBar";
+import { toast } from "@/components/ui/toast";
 
 function ProjectDropdown() {
   const [open, setOpen] = useState(false);
@@ -24,6 +21,7 @@ function ProjectDropdown() {
   const redo = useSceneStore((s) => s.redo);
   const undoStack = useSceneStore((s) => s.undoStack);
   const redoStack = useSceneStore((s) => s.redoStack);
+  const clearCircuit = useSceneStore((s) => s.clearCircuit);
   const [editing, setEditing] = useState(false);
   const [tempName, setTempName] = useState(projectName);
 
@@ -117,101 +115,16 @@ function ProjectDropdown() {
             </span>
           </button>
           <div className="h-px bg-slate-100" />
-          <button className="w-full text-left px-4 py-2.5 text-sm font-mono text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2">
-            <Trash2 size={14} /> Delete Project
+          <button
+            onClick={() => {
+              clearCircuit();
+              setOpen(false);
+              toast("Circuit cleared — undo with Ctrl+Z");
+            }}
+            className="w-full text-left px-4 py-2.5 text-sm font-mono text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
+          >
+            <Trash2 size={14} /> Clear Circuit
           </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function EmbedPopover() {
-  const [open, setOpen] = useState(false);
-  const [copiedUrl, setCopiedUrl] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  const embedUrl = "https://nodal.app/embed/project-abc123";
-  const embedCode = `<iframe src="${embedUrl}" width="800" height="600" frameborder="0"></iframe>`;
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const copyToClipboard = async (text: string, type: "url" | "code") => {
-    await navigator.clipboard.writeText(text);
-    if (type === "url") {
-      setCopiedUrl(true);
-      setTimeout(() => setCopiedUrl(false), 2000);
-    } else {
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 2000);
-    }
-  };
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors flex items-center gap-1.5 font-mono uppercase tracking-wider"
-      >
-        <Code2 size={14} />
-        Embed
-      </button>
-
-      {open && (
-        <div className="popover-content absolute top-full right-0 mt-2 w-80 bg-white border border-slate-200 rounded-lg shadow-xl z-50 p-4">
-          <div className="mb-3">
-            <label className="text-xs font-bold text-slate-800 font-mono uppercase tracking-wide mb-1.5 block">
-              Embed URL
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                readOnly
-                value={embedUrl}
-                className="flex-1 bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs font-mono text-slate-600 outline-none"
-              />
-              <button
-                onClick={() => copyToClipboard(embedUrl, "url")}
-                className="p-1.5 hover:bg-slate-100 rounded transition-colors text-slate-500"
-              >
-                {copiedUrl ? (
-                  <Check size={14} className="text-emerald-500" />
-                ) : (
-                  <Copy size={14} />
-                )}
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="text-xs font-bold text-slate-800 font-mono uppercase tracking-wide mb-1.5 block">
-              Embed Code
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                readOnly
-                value={embedCode}
-                className="flex-1 bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs font-mono text-slate-600 outline-none"
-              />
-              <button
-                onClick={() => copyToClipboard(embedCode, "code")}
-                className="p-1.5 hover:bg-slate-100 rounded transition-colors text-slate-500"
-              >
-                {copiedCode ? (
-                  <Check size={14} className="text-emerald-500" />
-                ) : (
-                  <Copy size={14} />
-                )}
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>
@@ -224,10 +137,15 @@ export default function Navbar() {
   const simulationTime = useSceneStore((s) => s.simulationTime);
   const undo = useSceneStore((s) => s.undo);
   const redo = useSceneStore((s) => s.redo);
+  const deleteSelectedNode = useSceneStore((s) => s.deleteSelectedNode);
+  const deleteSelectedWire = useSceneStore((s) => s.deleteSelectedWire);
 
   // Keyboard shortcuts
   const handleKeydown = useCallback(
     (e: KeyboardEvent) => {
+      const typing =
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement;
       if ((e.metaKey || e.ctrlKey) && e.key === "z") {
         e.preventDefault();
         if (e.shiftKey) {
@@ -235,9 +153,12 @@ export default function Navbar() {
         } else {
           undo();
         }
+      } else if ((e.key === "Delete" || e.key === "Backspace") && !typing) {
+        deleteSelectedNode();
+        deleteSelectedWire();
       }
     },
-    [undo, redo]
+    [undo, redo, deleteSelectedNode, deleteSelectedWire]
   );
 
   useEffect(() => {
@@ -275,13 +196,6 @@ export default function Navbar() {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2">
-        <EmbedPopover />
-
-        <button className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors flex items-center gap-1.5 font-mono uppercase tracking-wider">
-          <GitFork size={14} />
-          Fork
-        </button>
-
         <button
           onClick={toggleSimulation}
           className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold rounded-md transition-all duration-200 shadow-sm font-mono tracking-wide ${
@@ -297,14 +211,6 @@ export default function Navbar() {
           )}
           {isSimulating ? "Stop" : "Simulate"}
         </button>
-
-        <div className="w-8 h-8 rounded-full bg-slate-200 ml-1 overflow-hidden border border-slate-300 cursor-pointer hover:ring-2 hover:ring-[#5EEAD4] transition-all">
-          <img
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=NodalUser"
-            alt="User avatar"
-            className="w-full h-full object-cover"
-          />
-        </div>
       </div>
     </TopBar>
   );

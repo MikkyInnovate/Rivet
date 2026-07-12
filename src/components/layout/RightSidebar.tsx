@@ -1,15 +1,6 @@
 "use client";
 import React from "react";
-import {
-  Maximize,
-  Navigation,
-  Axis3d,
-  Box,
-  RotateCw,
-  RotateCcw,
-  Trash2,
-  Cuboid,
-} from "lucide-react";
+import { Trash2, Cuboid } from "lucide-react";
 import { useSceneStore } from "@/store/useSceneStore";
 import Toggle from "@/components/ui/Toggle";
 
@@ -32,46 +23,6 @@ export default function RightSidebar() {
 
   return (
     <aside className="w-[240px] border-l border-slate-200 bg-white flex flex-col h-full shrink-0 z-10 relative overflow-y-auto">
-      {/* Camera Controls */}
-      <div className="p-5 border-b border-slate-100">
-        <h3 className="text-[11px] font-bold text-slate-800 font-mono uppercase tracking-widest mb-3">
-          Camera
-        </h3>
-        <div className="flex gap-1.5">
-          {[
-            { Icon: Maximize, label: "Isometric" },
-            { Icon: Navigation, label: "Top" },
-            { Icon: Axis3d, label: "Front" },
-            { Icon: Box, label: "Side" },
-          ].map(({ Icon, label }) => (
-            <button
-              key={label}
-              className="p-2 bg-slate-50 hover:bg-slate-100 rounded-md text-slate-500 hover:text-slate-700 transition-all border border-slate-100 hover:border-slate-200"
-              title={label}
-            >
-              <Icon size={16} />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Rotation */}
-      {selectedNode && (
-        <div className="p-5 border-b border-slate-100">
-          <h3 className="text-[11px] font-bold text-slate-800 font-mono uppercase tracking-widest mb-3">
-            Rotation
-          </h3>
-          <div className="flex gap-1.5">
-            <button className="p-2 bg-slate-50 hover:bg-slate-100 rounded-md text-slate-500 hover:text-slate-700 transition-all border border-slate-100 hover:border-slate-200">
-              <RotateCcw size={16} />
-            </button>
-            <button className="p-2 bg-slate-50 hover:bg-slate-100 rounded-md text-slate-500 hover:text-slate-700 transition-all border border-slate-100 hover:border-slate-200">
-              <RotateCw size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Inspect Toggles */}
       <div className="p-5 border-b border-slate-100">
         <h3 className="text-[11px] font-bold text-slate-800 font-mono uppercase tracking-widest mb-3">

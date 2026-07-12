@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useSceneStore, PartType } from "@/store/useSceneStore";
+import { toast } from "@/components/ui/toast";
 
 interface PartEntry {
   name: string;
@@ -143,7 +144,7 @@ export default function LeftSidebar() {
                 if (p.implemented) {
                   addNode(p.type);
                 } else {
-                  alert(`${p.name} is not yet available in the MVP.`);
+                  toast(`${p.name} is coming soon`, "error");
                 }
               }}
               className={`part-item flex items-center gap-3 px-2 py-2 rounded-md border border-transparent text-left group focus:outline-none focus:ring-2 focus:ring-[#5EEAD4] ${
