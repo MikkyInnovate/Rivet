@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { solveCircuit, SolveResult } from '@/lib/circuit/solve';
 import { getPins } from '@/lib/circuit/pins';
+import { boardJunctions } from '@/lib/circuit/board';
 import { toast } from '@/components/ui/toast';
 
 export type PartType =
@@ -71,6 +72,7 @@ interface SceneState {
   addNode: (type: PartType, position?: [number, number, number]) => void;
   removeNode: (id: string) => void;
   updateNodePosition: (id: string, position: [number, number, number]) => void;
+  rotateNode: (id: string) => void;
   updateNodeProperty: (id: string, key: string, value: unknown) => void;
   selectNode: (id: string | null) => void;
   selectWire: (id: string | null) => void;
@@ -139,7 +141,8 @@ const HALF_SHIFT_TYPES: PartType[] = ['Led', 'Capacitor'];
 export function snapPosition(
   nodes: SceneNode[],
   position: [number, number, number],
-  type: PartType
+  type: PartType,
+  yaw = 0
 ): [number, number, number] {
   const [nx, , nz] = position;
 
@@ -155,15 +158,20 @@ export function snapPosition(
     const dz = nz - bz;
     if (Math.abs(dx) < 6.6 && Math.abs(dz) < 2.0) {
       const P = BOARD_PITCH;
-      const shift = HALF_SHIFT_TYPES.includes(type) ? 0.5 : 0;
-      let x = (Math.round(dx / P - shift) + shift) * P;
-      x = Math.max(-BOARD_COL_MAX + shift * P, Math.min(BOARD_COL_MAX - shift * P, x));
+      // Legs run along x when the part is unrotated, along z at 90°/270°.
+      const legsAlongX = Math.round(yaw / (Math.PI / 2)) % 2 === 0;
+      const half = HALF_SHIFT_TYPES.includes(type) ? 0.5 : 0;
+      const shiftX = legsAlongX ? half : 0;
+      const shiftZ = legsAlongX ? 0 : half;
 
-      let row = Math.round(dz / P);
-      if (row === 0) row = dz >= 0 ? 1 : -1; // channel has no holes
-      row = Math.max(-5, Math.min(5, row));
+      let x = (Math.round(dx / P - shiftX) + shiftX) * P;
+      x = Math.max(-BOARD_COL_MAX + shiftX * P, Math.min(BOARD_COL_MAX - shiftX * P, x));
 
-      return [x + bx, BOARD_SEAT_Y, row * P + bz];
+      let z = (Math.round(dz / P - shiftZ) + shiftZ) * P;
+      if (Math.abs(z) < P / 4) z = dz >= 0 ? (shiftZ ? P / 2 : P) : (shiftZ ? -P / 2 : -P);
+      z = Math.max(-5 * P, Math.min(5 * P, z));
+
+      return [x + bx, BOARD_SEAT_Y, z + bz];
     }
   }
   return [nx, 0, nz];
@@ -241,12 +249,28 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     set({ pendingPin: null });
     // Re-solve live if simulation is running.
     if (get().isSimulating) {
-      set({ simulation: solveCircuit(get().nodes, get().wires) });
+      set({ simulation: solveCircuit(get().nodes, get().wires, boardJunctions(get().nodes)) });
     }
     void nodes;
   },
 
   cancelWiring: () => set({ pendingPin: null }),
+
+  rotateNode: (id) => {
+    const state = get();
+    const node = state.nodes.find((n) => n.id === id);
+    if (!node) return;
+    state.pushHistory();
+    const yaw = ((node.rotation?.[1] ?? 0) + Math.PI / 2) % (Math.PI * 2);
+    const pos = snapPosition(state.nodes, node.position, node.type, yaw);
+    set({
+      nodes: state.nodes.map((n) =>
+        n.id === id
+          ? { ...n, rotation: [n.rotation?.[0] ?? 0, yaw, n.rotation?.[2] ?? 0] as [number, number, number], position: pos }
+          : n
+      ),
+    });
+  },
 
   hydrateFromStorage: () => {
     try {
@@ -325,7 +349,7 @@ export const useSceneStore = create<SceneState>((set, get) => ({
   updateNodePosition: (id, position) => {
     const { nodes } = get();
     const target = nodes.find((n) => n.id === id);
-    const finalPos = target ? snapPosition(nodes, position, target.type) : position;
+    const finalPos = target ? snapPosition(nodes, position, target.type, target.rotation?.[1] ?? 0) : position;
     set((state) => ({
       nodes: state.nodes.map((n) =>
         n.id === id ? { ...n, position: finalPos } : n
@@ -391,7 +415,7 @@ export const useSceneStore = create<SceneState>((set, get) => ({
   toggleSimulation: () => {
     const starting = !get().isSimulating;
     if (starting) {
-      const result = solveCircuit(get().nodes, get().wires);
+      const result = solveCircuit(get().nodes, get().wires, boardJunctions(get().nodes));
       set({ isSimulating: true, simulationTime: 0, simulation: result, pendingPin: null });
       if (result.status !== 'ok' || result.currentA === 0) {
         toast(result.message, 'error');
@@ -465,7 +489,7 @@ if (typeof window !== 'undefined') {
     lastNodes = state.nodes;
     lastWires = state.wires;
     if (state.isSimulating) {
-      useSceneStore.setState({ simulation: solveCircuit(state.nodes, state.wires) });
+      useSceneStore.setState({ simulation: solveCircuit(state.nodes, state.wires, boardJunctions(state.nodes)) });
     }
   });
 }

@@ -6,11 +6,11 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 const COLOR_MAP: Record<string, string> = {
-  Red: "#ef4444",
-  Blue: "#3b82f6",
-  Green: "#22c55e",
-  Yellow: "#eab308",
-  White: "#f1f5f9",
+  Red: "#ff3b3b",
+  Blue: "#3d7bff",
+  Green: "#2fd455",
+  Yellow: "#ffd60a",
+  White: "#f8fafc",
 };
 
 export default function LED({ node }: { node: SceneNode }) {
@@ -71,11 +71,11 @@ export default function LED({ node }: { node: SceneNode }) {
 
       {/* Flange (the flat rim at the base of the epoxy package) */}
       <mesh ref={baseRef} position={[0, 0.98, 0]}>
-        <cylinderGeometry args={[0.21, 0.21, 0.06, 24]} />
+        <cylinderGeometry args={[0.18, 0.18, 0.055, 24]} />
         <meshPhysicalMaterial
           color={colorHex}
           transparent
-          opacity={0.9}
+          opacity={0.95}
           roughness={0.15}
           clearcoat={1}
           clearcoatRoughness={0.1}
@@ -86,12 +86,12 @@ export default function LED({ node }: { node: SceneNode }) {
       </mesh>
 
       {/* Epoxy body */}
-      <mesh position={[0, 1.185, 0]}>
-        <cylinderGeometry args={[0.165, 0.165, 0.35, 24]} />
+      <mesh position={[0, 1.2, 0]}>
+        <cylinderGeometry args={[0.14, 0.14, 0.38, 24]} />
         <meshPhysicalMaterial
           color={colorHex}
           transparent
-          opacity={0.85}
+          opacity={0.93}
           roughness={0.08}
           clearcoat={1}
           clearcoatRoughness={0.06}
@@ -102,12 +102,12 @@ export default function LED({ node }: { node: SceneNode }) {
       </mesh>
 
       {/* Dome cap */}
-      <mesh ref={bulbRef} position={[0, 1.36, 0]}>
-        <sphereGeometry args={[0.165, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+      <mesh ref={bulbRef} position={[0, 1.39, 0]}>
+        <sphereGeometry args={[0.14, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshPhysicalMaterial
           color={colorHex}
           transparent
-          opacity={0.85}
+          opacity={0.93}
           roughness={0.08}
           clearcoat={1}
           clearcoatRoughness={0.06}
@@ -119,7 +119,7 @@ export default function LED({ node }: { node: SceneNode }) {
 
       {/* Internal anvil + post, visible through the epoxy like a real LED */}
       <mesh position={[0.04, 1.15, 0]}>
-        <boxGeometry args={[0.07, 0.16, 0.04]} />
+        <boxGeometry args={[0.06, 0.15, 0.035]} />
         <meshStandardMaterial color="#3f3f46" metalness={0.7} roughness={0.4} />
       </mesh>
       <mesh position={[-0.05, 1.1, 0]}>

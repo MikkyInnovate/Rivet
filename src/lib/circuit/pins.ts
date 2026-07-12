@@ -38,16 +38,20 @@ export function isWireable(type: PartType): boolean {
   return getPins(type).length > 0;
 }
 
-/** World-space position of a pin (part rotation not yet supported). */
+/** World-space position of a pin, honoring the part's yaw (Y rotation). */
 export function pinWorldPosition(
   node: SceneNode,
   pinId: string
 ): [number, number, number] | null {
   const pin = getPins(node.type).find((p) => p.id === pinId);
   if (!pin) return null;
+  const yaw = node.rotation?.[1] ?? 0;
+  const [ox, oy, oz] = pin.offset;
+  const cos = Math.cos(yaw);
+  const sin = Math.sin(yaw);
   return [
-    node.position[0] + pin.offset[0],
-    node.position[1] + pin.offset[1],
-    node.position[2] + pin.offset[2],
+    node.position[0] + ox * cos + oz * sin,
+    node.position[1] + oy,
+    node.position[2] - ox * sin + oz * cos,
   ];
 }

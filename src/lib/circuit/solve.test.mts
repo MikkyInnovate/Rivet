@@ -151,6 +151,23 @@ console.log("10) Battery terminals wired directly together");
   check("status", r.status, "unsupported");
 }
 
+console.log("11) Breadboard strip junction: resistor and LED share a column — NO wire between them");
+console.log("    battery wired to each end; the shared strip completes the loop → 14.878 mA");
+{
+  const r = solveCircuit(
+    [battery(), resistor("r1", 470), led()],
+    [
+      wire("bat", "pos", "r1", "a"),
+      wire("led1", "cathode", "bat", "neg"),
+      // note: NO wire between r1.b and led1.anode
+    ],
+    [["r1:b", "led1:anode"]] // same breadboard column strip
+  );
+  check("status", r.status, "ok");
+  check("current (A)", r.currentA, 7 / 470.5);
+  check("LED state", r.ledStates["led1"], "on");
+}
+
 if (failures > 0) {
   console.error(`\n${failures} FAILURE(S)`);
   process.exit(1);

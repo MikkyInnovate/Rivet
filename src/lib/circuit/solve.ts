@@ -53,7 +53,16 @@ interface ElementEdge {
   volts: number;
 }
 
-export function solveCircuit(nodes: SolveNode[], wires: SolveWire[]): SolveResult {
+/**
+ * @param junctions Extra pin groups that are electrically common without a
+ * wire — e.g. legs seated in the same breadboard strip. Each entry is a list
+ * of "nodeId:pinId" keys.
+ */
+export function solveCircuit(
+  nodes: SolveNode[],
+  wires: SolveWire[],
+  junctions: string[][] = []
+): SolveResult {
   const allLedsOff = (state: LedState = "off") =>
     Object.fromEntries(nodes.filter((n) => n.type === "Led").map((n) => [n.id, state]));
 
@@ -81,6 +90,10 @@ export function solveCircuit(nodes: SolveNode[], wires: SolveWire[]): SolveResul
 
   for (const w of wires) {
     union(key(w.sourceNodeId, w.sourcePin), key(w.targetNodeId, w.targetPin));
+  }
+  // Breadboard strips: every pin in a group shares one net.
+  for (const group of junctions) {
+    for (let i = 1; i < group.length; i++) union(group[0], group[i]);
   }
 
   // --- Element edges between nets ---

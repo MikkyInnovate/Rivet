@@ -1,6 +1,14 @@
 "use client";
 import React from "react";
-import { Trash2, Cuboid } from "lucide-react";
+import {
+  Trash2,
+  Cuboid,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  RotateCw,
+} from "lucide-react";
 import { useSceneStore } from "@/store/useSceneStore";
 import Toggle from "@/components/ui/Toggle";
 
@@ -17,12 +25,67 @@ export default function RightSidebar() {
   const showVoltages = useSceneStore((s) => s.showVoltages);
   const toggleShowLabels = useSceneStore((s) => s.toggleShowLabels);
   const toggleShowVoltages = useSceneStore((s) => s.toggleShowVoltages);
+  const updateNodePosition = useSceneStore((s) => s.updateNodePosition);
+  const rotateNode = useSceneStore((s) => s.rotateNode);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const selectedWire = wires.find((w) => w.id === selectedWireId);
 
+  // Nudge the selected part by one breadboard hole (0.35).
+  const nudge = (dx: number, dz: number) => {
+    if (!selectedNode) return;
+    updateNodePosition(selectedNode.id, [
+      selectedNode.position[0] + dx * 0.35,
+      selectedNode.position[1],
+      selectedNode.position[2] + dz * 0.35,
+    ]);
+  };
+
+  const placeable =
+    selectedNode && !["Breadboard", "Wire"].includes(selectedNode.type);
+
+  const nudgeBtn =
+    "p-2 bg-slate-50 hover:bg-slate-100 rounded-md text-slate-500 hover:text-slate-800 transition-all border border-slate-100 hover:border-slate-200 active:scale-95";
+
   return (
     <aside className="w-[240px] border-l border-slate-200 bg-white flex flex-col h-full shrink-0 z-10 relative overflow-y-auto">
+      {/* Placement: hole-by-hole nudge + 90° rotation */}
+      {placeable && (
+        <div className="p-5 border-b border-slate-100">
+          <h3 className="text-[11px] font-bold text-slate-800 font-mono uppercase tracking-widest mb-3">
+            Placement
+          </h3>
+          <div className="flex items-center gap-4">
+            <div className="grid grid-cols-3 gap-1 w-fit">
+              <div />
+              <button className={nudgeBtn} title="Up one hole" onClick={() => nudge(0, -1)}>
+                <ArrowUp size={14} />
+              </button>
+              <div />
+              <button className={nudgeBtn} title="Left one hole" onClick={() => nudge(-1, 0)}>
+                <ArrowLeft size={14} />
+              </button>
+              <button className={nudgeBtn} title="Down one hole" onClick={() => nudge(0, 1)}>
+                <ArrowDown size={14} />
+              </button>
+              <button className={nudgeBtn} title="Right one hole" onClick={() => nudge(1, 0)}>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+            <button
+              className={`${nudgeBtn} flex items-center gap-1.5 text-xs font-mono`}
+              title="Rotate 90°"
+              onClick={() => selectedNode && rotateNode(selectedNode.id)}
+            >
+              <RotateCw size={14} /> 90°
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-400 font-mono mt-2.5">
+            Moves snap to breadboard holes. You can also drag the part.
+          </p>
+        </div>
+      )}
+
       {/* Inspect Toggles */}
       <div className="p-5 border-b border-slate-100">
         <h3 className="text-[11px] font-bold text-slate-800 font-mono uppercase tracking-widest mb-3">

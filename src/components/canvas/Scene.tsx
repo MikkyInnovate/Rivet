@@ -82,6 +82,7 @@ function PartRenderer({ node }: { node: SceneNode }) {
   return (
     <group
       position={node.position}
+      rotation={node.rotation}
       onPointerDown={(e) => {
         e.stopPropagation();
         selectNode(node.id);
