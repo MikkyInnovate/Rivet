@@ -139,7 +139,7 @@ export default function Scene() {
         // the "drag and drop" feel immediately.
         const spawnPos: [number, number, number] = [
           (e.clientX / window.innerWidth - 0.5) * 20, 
-          type === 'Breadboard' ? 0.25 : 1, 
+          type === 'Breadboard' ? 0.25 : 0, 
           (e.clientY / window.innerHeight - 0.5) * 20
         ];
         

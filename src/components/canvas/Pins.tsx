@@ -27,7 +27,9 @@ export default function Pins({ node }: { node: SceneNode }) {
 
         return (
           <group key={pin.id} position={pin.offset}>
+            {/* Generous invisible hit target; the visible terminal stays small */}
             <mesh
+              visible={false}
               onClick={(e) => {
                 e.stopPropagation();
                 connectPin(node.id, pin.id);
@@ -42,9 +44,12 @@ export default function Pins({ node }: { node: SceneNode }) {
                 document.body.style.cursor = "auto";
               }}
             >
-              <sphereGeometry args={[isArmed ? 0.12 : 0.09, 16, 16]} />
+              <sphereGeometry args={[0.16, 8, 8]} />
+            </mesh>
+            <mesh>
+              <sphereGeometry args={[isArmed ? 0.09 : active ? 0.07 : 0.055, 16, 16]} />
               <meshStandardMaterial
-                color={isArmed ? "#2DD4BF" : isHovered ? "#5EEAD4" : "#64748b"}
+                color={isArmed ? "#2DD4BF" : isHovered ? "#5EEAD4" : "#8b9099"}
                 emissive={active ? "#2DD4BF" : "#000000"}
                 emissiveIntensity={isArmed ? 1.2 : isHovered ? 0.6 : 0}
                 metalness={0.6}

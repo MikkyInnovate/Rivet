@@ -72,11 +72,13 @@ export default function LED({ node }: { node: SceneNode }) {
       {/* Flange (the flat rim at the base of the epoxy package) */}
       <mesh ref={baseRef} position={[0, 0.98, 0]}>
         <cylinderGeometry args={[0.21, 0.21, 0.06, 24]} />
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           color={colorHex}
           transparent
-          opacity={0.75}
-          roughness={0.2}
+          opacity={0.9}
+          roughness={0.15}
+          clearcoat={1}
+          clearcoatRoughness={0.1}
           emissive={colorHex}
           emissiveIntensity={0}
         />
@@ -86,11 +88,14 @@ export default function LED({ node }: { node: SceneNode }) {
       {/* Epoxy body */}
       <mesh position={[0, 1.185, 0]}>
         <cylinderGeometry args={[0.165, 0.165, 0.35, 24]} />
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           color={colorHex}
           transparent
-          opacity={0.65}
-          roughness={0.15}
+          opacity={0.85}
+          roughness={0.08}
+          clearcoat={1}
+          clearcoatRoughness={0.06}
+          ior={1.45}
           emissive={colorHex}
           emissiveIntensity={0}
         />
@@ -99,11 +104,14 @@ export default function LED({ node }: { node: SceneNode }) {
       {/* Dome cap */}
       <mesh ref={bulbRef} position={[0, 1.36, 0]}>
         <sphereGeometry args={[0.165, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           color={colorHex}
           transparent
-          opacity={0.65}
-          roughness={0.1}
+          opacity={0.85}
+          roughness={0.08}
+          clearcoat={1}
+          clearcoatRoughness={0.06}
+          ior={1.45}
           emissive={colorHex}
           emissiveIntensity={0}
         />

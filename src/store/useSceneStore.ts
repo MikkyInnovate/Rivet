@@ -246,7 +246,7 @@ export const useSceneStore = create<SceneState>((set, get) => ({
   addNode: (type, position) => {
     const state = get();
     state.pushHistory();
-    const spawnPos = position || [(Math.random() - 0.5) * 4, type === 'Breadboard' ? 0.25 : 1, (Math.random() - 0.5) * 4];
+    const spawnPos = position || [(Math.random() - 0.5) * 4, type === 'Breadboard' ? 0.25 : 0, (Math.random() - 0.5) * 4];
     const newNode: SceneNode = {
       id: uuidv4(),
       type,

@@ -17,12 +17,12 @@ export const PART_PINS: Partial<Record<PartType, PinDef[]>> = {
     { id: "neg", label: "−", offset: [-0.5, 2.75, 0.5] },
   ],
   Led: [
-    { id: "anode", label: "+", offset: [-0.1, 0.5, 0] },
-    { id: "cathode", label: "−", offset: [0.1, 0.42, 0] },
+    { id: "anode", label: "+", offset: [-0.1, 0.08, 0] },
+    { id: "cathode", label: "−", offset: [0.1, 0.08, 0] },
   ],
   Resistor: [
-    { id: "a", label: "1", offset: [-0.78, 0.55, 0] },
-    { id: "b", label: "2", offset: [0.78, 0.55, 0] },
+    { id: "a", label: "1", offset: [-0.55, 0.08, 0] },
+    { id: "b", label: "2", offset: [0.55, 0.08, 0] },
   ],
   Capacitor: [
     { id: "pos", label: "+", offset: [-0.14, 0.3, 0] },
