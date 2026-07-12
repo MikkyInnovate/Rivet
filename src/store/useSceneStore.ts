@@ -81,10 +81,22 @@ interface SceneState {
   // Project
   setProjectName: (name: string) => void;
 
+  // Persistence
+  hydrateFromStorage: () => void;
+
   // History
   undo: () => void;
   redo: () => void;
   pushHistory: () => void;
+}
+
+export const CIRCUIT_STORAGE_KEY = 'graphite_circuit_v1';
+
+export interface SavedCircuit {
+  nodes: SceneNode[];
+  wires: WireConnection[];
+  projectName: string;
+  savedAt: number;
 }
 
 const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
@@ -130,6 +142,22 @@ export const useSceneStore = create<SceneState>((set, get) => ({
   projectName: 'Untitled',
   undoStack: [],
   redoStack: [],
+
+  hydrateFromStorage: () => {
+    try {
+      const raw = localStorage.getItem(CIRCUIT_STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as SavedCircuit;
+      if (!Array.isArray(saved.nodes)) return;
+      set({
+        nodes: saved.nodes,
+        wires: Array.isArray(saved.wires) ? saved.wires : [],
+        projectName: saved.projectName || 'Untitled',
+      });
+    } catch {
+      // Corrupt save — start fresh rather than crash.
+    }
+  },
 
   pushHistory: () => {
     const { nodes, wires, undoStack } = get();
@@ -311,3 +339,25 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     });
   },
 }));
+
+// Auto-save the circuit (scene data only — not selection/undo) to localStorage,
+// debounced so rapid edits don't thrash storage.
+if (typeof window !== 'undefined') {
+  let saveTimer: ReturnType<typeof setTimeout> | null = null;
+  useSceneStore.subscribe((state) => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try {
+        const payload: SavedCircuit = {
+          nodes: state.nodes,
+          wires: state.wires,
+          projectName: state.projectName,
+          savedAt: Date.now(),
+        };
+        localStorage.setItem(CIRCUIT_STORAGE_KEY, JSON.stringify(payload));
+      } catch {
+        // Storage full/unavailable — skip silently.
+      }
+    }, 400);
+  });
+}

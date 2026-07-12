@@ -1,93 +1,142 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Zap, Box, Settings, GraduationCap } from "lucide-react";
-
-type Accent = "teal" | "amber";
-
-type NavItem = {
-  name: string;
-  sub: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  isActive: (p: string) => boolean;
-  accent: Accent;
-};
-
-const NAV: NavItem[] = [
-  {
-    name: "Electrical",
-    sub: "Circuit Lab",
-    href: "/",
-    icon: Zap,
-    isActive: (p) => p === "/" || p.startsWith("/electrical"),
-    accent: "teal",
-  },
-  {
-    name: "Mechanical",
-    sub: "3D Studio",
-    href: "/mechanical/history",
-    icon: Box,
-    isActive: (p) => p.startsWith("/mechanical"),
-    accent: "amber",
-  },
-];
-
-const ACTIVE: Record<Accent, string> = {
-  teal: "text-teal-300 bg-teal-500/10 border-teal-500/30",
-  amber: "text-amber-300 bg-amber-500/10 border-amber-500/30",
-};
+import { Zap, Box, Settings, GraduationCap, Boxes, User, Home } from "lucide-react";
+import { useStore } from "@/modules/mechanical/store";
 
 export default function Sidebar() {
   const pathname = usePathname() || "/";
+  const models = useStore((s) => s.models);
+  const loadModelsFromStorage = useStore((s) => s.loadModelsFromStorage);
+
+  useEffect(() => {
+    loadModelsFromStorage();
+  }, [loadModelsFromStorage]);
+
+  const homeActive = pathname === "/";
+  const electricalActive = pathname.startsWith("/electrical");
+  const mechanicalActive = pathname.startsWith("/mechanical");
 
   return (
-    <aside className="w-20 h-full flex flex-col items-center py-4 bg-slate-950 border-r border-slate-800 shrink-0 select-none z-30">
+    <aside className="w-60 h-full bg-white border-r border-slate-200 flex flex-col shrink-0 z-30">
       {/* Brand */}
-      <Link href="/" className="group mb-6 flex flex-col items-center gap-1.5" aria-label="Graphite home">
-        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 flex items-center justify-center shadow-lg group-hover:border-teal-500/40 transition-colors">
-          <GraduationCap className="w-5 h-5 text-slate-200 group-hover:text-teal-400 transition-colors" />
+      <div className="flex items-center gap-3 px-4 h-16 border-b border-slate-200 shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-white shrink-0">
+          <GraduationCap className="w-5 h-5" />
         </div>
-        <span className="text-[9px] font-bold tracking-[0.15em] text-slate-500 uppercase">
-          Graphite
-        </span>
-      </Link>
+        <div className="min-w-0">
+          <div className="font-bold text-slate-900 leading-tight">Graphite</div>
+          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+            Engineering Sandbox
+          </div>
+        </div>
+      </div>
 
-      {/* Modes */}
-      <nav className="flex-1 w-full flex flex-col items-center gap-2 px-2">
-        {NAV.map((item) => {
-          const Icon = item.icon;
-          const active = item.isActive(pathname);
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={`w-full flex flex-col items-center gap-1.5 py-3 rounded-xl border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/60 ${
-                active
-                  ? ACTIVE[item.accent]
-                  : "text-slate-400 border-transparent hover:text-slate-100 hover:bg-slate-800/60"
-              }`}
-              title={`${item.name} — ${item.sub}`}
-            >
-              <Icon className="w-[22px] h-[22px]" />
-              <span className="text-[10px] font-semibold leading-none">{item.name}</span>
-            </Link>
-          );
-        })}
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400 px-2 mb-2">
+          Workspaces
+        </div>
+        <div className="flex flex-col gap-1">
+          <Link
+            href="/"
+            aria-current={homeActive ? "page" : undefined}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              homeActive
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            }`}
+          >
+            <Home className="w-[18px] h-[18px]" />
+            Home
+          </Link>
+
+          <Link
+            href="/electrical"
+            aria-current={electricalActive ? "page" : undefined}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              electricalActive
+                ? "bg-teal-50 text-teal-700"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            }`}
+          >
+            <Zap className="w-[18px] h-[18px]" />
+            Electrical Lab
+          </Link>
+
+          <Link
+            href="/mechanical/history"
+            aria-current={mechanicalActive ? "page" : undefined}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              mechanicalActive
+                ? "bg-amber-50 text-amber-700"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            }`}
+          >
+            <Box className="w-[18px] h-[18px]" />
+            Mechanical Studio
+            {models.length > 0 && (
+              <span
+                className={`ml-auto text-[11px] font-mono px-1.5 py-0.5 rounded ${
+                  mechanicalActive
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-slate-100 text-slate-400"
+                }`}
+              >
+                {models.length}
+              </span>
+            )}
+          </Link>
+        </div>
+
+        {models.length > 0 && (
+          <>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400 px-2 mt-6 mb-2">
+              Recent models
+            </div>
+            <div className="flex flex-col gap-0.5">
+              {models.slice(0, 6).map((m) => {
+                const active = pathname === `/mechanical/studio/${m.id}`;
+                return (
+                  <Link
+                    key={m.id}
+                    href={`/mechanical/studio/${m.id}`}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-colors ${
+                      active
+                        ? "bg-slate-100 text-slate-900"
+                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
+                  >
+                    <Boxes className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="truncate">{m.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </>
+        )}
       </nav>
 
-      {/* Settings */}
-      <button
-        type="button"
-        className="w-full flex flex-col items-center gap-1.5 py-3 rounded-xl text-slate-400 border border-transparent hover:text-slate-100 hover:bg-slate-800/60 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/60"
-        title="Settings"
-      >
-        <Settings className="w-[22px] h-[22px]" />
-        <span className="text-[10px] font-semibold leading-none">Settings</span>
-      </button>
+      {/* Footer */}
+      <div className="border-t border-slate-200 p-3 flex items-center gap-3 shrink-0">
+        <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+          <User className="w-4 h-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[13px] font-medium text-slate-700 truncate">My workspace</div>
+          <div className="text-[11px] text-slate-400">Local storage</div>
+        </div>
+        <button
+          type="button"
+          className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50"
+          title="Settings"
+          aria-label="Settings"
+        >
+          <Settings className="w-[18px] h-[18px]" />
+        </button>
+      </div>
     </aside>
   );
 }

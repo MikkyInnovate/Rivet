@@ -257,13 +257,9 @@ export default function Navbar() {
             </div>
           </div>
           <h1 className="font-mono font-bold text-slate-800 text-lg tracking-tight">
-            Nodal
+            Electrical Lab
           </h1>
         </div>
-
-        <span className="text-sm text-slate-500 font-mono hover:text-slate-800 cursor-pointer transition-colors hidden md:inline">
-          Explore
-        </span>
       </div>
 
       {/* Center: Project name dropdown */}

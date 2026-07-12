@@ -1,9 +1,9 @@
 "use client";
 import dynamic from "next/dynamic";
 import React from "react";
-import MechanicalTopBar from "@/components/layout/MechanicalTopBar";
 
-// History reads local IndexedDB, so keep it client-only.
+// History reads local IndexedDB, so keep it client-only. Navigation is owned by
+// the global studio sidebar, so no per-page top bar here.
 const History = dynamic(
   () => import("@/modules/mechanical/pages/History").then((m) => ({ default: m.History })),
   {
@@ -17,10 +17,5 @@ const History = dynamic(
 );
 
 export default function HistoryPage() {
-  return (
-    <>
-      <MechanicalTopBar />
-      <History />
-    </>
-  );
+  return <History />;
 }
