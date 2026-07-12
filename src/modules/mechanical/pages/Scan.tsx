@@ -64,13 +64,8 @@ export const Scan = () => {
   };
 
   const handleProcess = async (base64: string) => {
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.NEXT_PUBLIC_API_KEY || process.env.API_KEY;
-    if (!apiKey) {
-      setError("API_KEY missing from environment.");
-      return;
-    }
     try {
-      const id = await generateModel(base64, apiKey);
+      const id = await generateModel(base64);
       navigate(`/studio/${id}`);
     } catch (err: any) {
       setError(err.message || "CAD extraction failed. Check lighting and clarity.");

@@ -167,9 +167,21 @@ export async function generate3DModel(imageBase64: string, apiKey: string): Prom
   }
 }
 
-export async function createChatSession(apiKey: string, modelContext: CSGModel) {
+type ChatTurn = { role: 'user' | 'model'; text: string };
+
+/**
+ * Stateless tutor reply used by the server-side /api/tutor/chat route handler.
+ * The full prior history is passed in on every call so no chat session needs to
+ * be held in the browser (and the API key never leaves the server).
+ */
+export async function generateTutorReply(
+  apiKey: string,
+  modelContext: Pick<CSGModel, 'name' | 'parts'>,
+  history: ChatTurn[],
+  message: string
+): Promise<string> {
   const ai = new GoogleGenAI({ apiKey });
-  const contextPrompt = `
+  const systemInstruction = `
 You are an AI Engineering Tutor. You are currently analyzing a specific engineering drawing.
 Model Context:
 - Name: ${modelContext.name}
@@ -186,10 +198,26 @@ CRITICAL RULES:
 - If the user asks about unrelated topics (e.g., "Write a poem", "What is the capital of France?", "Fix my code"), you must REFUSE.
 - Reply: "I can only assist you with understanding this engineering drawing. Let's focus on the model."
 `;
-  return ai.chats.create({
+
+  // Gemini requires the first turn to be from the user, so drop any leading
+  // assistant/welcome messages before mapping the transcript.
+  const trimmed = [...history];
+  while (trimmed.length && trimmed[0].role === 'model') trimmed.shift();
+
+  const contents = [
+    ...trimmed
+      .filter((h) => h.text?.trim())
+      .map((h) => ({ role: h.role, parts: [{ text: h.text }] })),
+    { role: 'user' as const, parts: [{ text: message }] },
+  ];
+
+  const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    config: { systemInstruction: contextPrompt }
+    contents,
+    config: { systemInstruction },
   });
+
+  return response.text || '';
 }
 
 export async function generateSpeech(text: string, apiKey: string): Promise<ArrayBuffer> {

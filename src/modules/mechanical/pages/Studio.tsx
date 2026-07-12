@@ -8,8 +8,6 @@ import { ChevronLeft, ChevronRight, MessageSquare, Send, X, BoxSelect, Split, Ru
 import { useStore } from '../store';
 import { ModelRenderer } from '../components/ModelRenderer';
 import { DocumentPreview } from '../components/DocumentPreview';
-import { createChatSession } from '../services/geminiService';
-import { Chat } from "@google/genai";
 import { Unit } from '../types';
 
 export const Studio = () => {
@@ -25,7 +23,6 @@ export const Studio = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'model', text: string }[]>([]);
-  const [chatSession, setChatSession] = useState<Chat | null>(null);
   const [activeTab, setActiveTab] = useState<'chat' | 'steps'>('steps');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -56,10 +53,7 @@ export const Studio = () => {
   }, [id, models]);
 
   useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.NEXT_PUBLIC_API_KEY || process.env.API_KEY;
-    if (currentModel && apiKey) {
-      createChatSession(apiKey, currentModel).then(setChatSession);
-
+    if (currentModel) {
       // Reset chat and show welcome message for the new model
       setChatHistory([{
         role: 'model',
@@ -69,14 +63,25 @@ export const Studio = () => {
   }, [currentModel]);
 
   const handleSendMessage = async () => {
-    if (!chatMessage.trim() || !chatSession) return;
+    if (!chatMessage.trim() || !currentModel) return;
     const userMsg = chatMessage;
+    const priorHistory = chatHistory;
     setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
     setChatMessage("");
     setIsChatLoading(true);
     try {
-      const result = await chatSession.sendMessage({ message: userMsg });
-      setChatHistory(prev => [...prev, { role: 'model', text: result.text || "I couldn't process that." }]);
+      const res = await fetch('/api/tutor/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: { name: currentModel.name, parts: currentModel.parts },
+          history: priorHistory,
+          message: userMsg,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Chat failed.");
+      setChatHistory(prev => [...prev, { role: 'model', text: data.text || "I couldn't process that." }]);
     } catch (e) {
       console.error(e);
       setChatHistory(prev => [...prev, { role: 'model', text: "Sorry, I encountered an error. Please try again." }]);

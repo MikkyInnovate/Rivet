@@ -23,7 +23,7 @@ const MechanicalApp = dynamic(() => import("@/modules/mechanical/App"), {
 
 export default function MechanicalPage() {
   return (
-    <div className="w-full h-full min-h-screen bg-stone-950 text-slate-100 overflow-hidden font-sans">
+    <div className="w-full h-full overflow-y-auto bg-stone-950 text-slate-100 font-sans">
       <MechanicalApp />
     </div>
   );

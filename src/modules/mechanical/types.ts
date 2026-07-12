@@ -36,5 +36,5 @@ export interface AppState {
   toggleWireframe: () => void;
   toggleShowDimensions: () => void;
   loadModelsFromStorage: () => Promise<void>;
-  generateModel: (imageBase64: string, apiKey: string) => Promise<string>;
+  generateModel: (imageBase64: string) => Promise<string>;
 }

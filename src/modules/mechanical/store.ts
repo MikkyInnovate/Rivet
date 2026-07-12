@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { get as idbGet, set as idbSet } from 'idb-keyval';
 import { AppState, CSGModel } from './types';
-import { generate3DModel } from './services/geminiService';
 
 const DB_KEY = 'graphite_models';
 
@@ -52,11 +51,22 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
 
-  generateModel: async (imageBase64, apiKey) => {
+  generateModel: async (imageBase64) => {
     set({ isGenerating: true });
     try {
-        const partialModel = await generate3DModel(imageBase64, apiKey);
-        
+        const res = await fetch('/api/drafting/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageBase64 }),
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Generation failed.');
+        }
+
+        const partialModel = await res.json();
+
         const newModel: CSGModel = {
             id: generateId(),
             timestamp: Date.now(),
