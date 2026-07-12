@@ -30,7 +30,6 @@ export default function Wire({ id, start, end, color, arcHeight = 3 }: WireProps
   const curve = useMemo(() => {
     const startVec = new THREE.Vector3(...start);
     const endVec = new THREE.Vector3(...end);
-    const dist = startVec.distanceTo(endVec);
 
     // Midpoint with arc
     const mid = new THREE.Vector3().lerpVectors(startVec, endVec, 0.5);

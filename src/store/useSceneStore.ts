@@ -181,7 +181,7 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     let finalPos = position;
 
     if (breadboard) {
-      const [bx, by, bz] = breadboard.position;
+      const [bx, , bz] = breadboard.position;
       const [nx, ny, nz] = position;
       
       // If within breadboard bounds (approx 14x4.2)

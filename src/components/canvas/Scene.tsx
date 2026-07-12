@@ -3,7 +3,7 @@ import React, { Suspense } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Grid, Environment, PivotControls } from "@react-three/drei";
-import { useSceneStore, SceneNode } from "@/store/useSceneStore";
+import { useSceneStore, SceneNode, PartType } from "@/store/useSceneStore";
 import Battery from "./parts/Battery";
 import Breadboard from "./parts/Breadboard";
 import LED from "./parts/LED";
@@ -68,7 +68,7 @@ function PartRenderer({ node }: { node: SceneNode }) {
       depthTest={false}
       anchor={[0, 0, 0]}
       scale={2}
-      onDragEnd={(m: any) => {
+      onDragEnd={(m: THREE.Matrix4) => {
         // Extract translation from matrix
         const position = new THREE.Vector3();
         position.setFromMatrixPosition(m);
@@ -85,7 +85,7 @@ function PartRenderer({ node }: { node: SceneNode }) {
         {renderItem()}
       </group>
     </PivotControls>
-  ) as any;
+  ) as unknown as React.ReactNode;
 }
 
 function DefaultWires() {
@@ -186,7 +186,7 @@ export default function Scene() {
           (e.clientY / window.innerHeight - 0.5) * 20
         ];
         
-        addNode(type as any, spawnPos);
+        addNode(type as PartType, spawnPos);
       }}
     >
       <color attach="background" args={["#F8FAFC"]} />
