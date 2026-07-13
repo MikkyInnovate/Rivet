@@ -9,6 +9,7 @@ import LED from "./parts/LED";
 import Resistor from "./parts/Resistor";
 import Capacitor from "./parts/Capacitor";
 import Wire from "./parts/Wire";
+import Switch from "./parts/Switch";
 import Pins from "./Pins";
 import { pinWorldPosition } from "@/lib/circuit/pins";
 
@@ -53,6 +54,8 @@ function PartRenderer({ node }: { node: SceneNode }) {
         return <Resistor node={node} />;
       case "Capacitor":
         return <Capacitor node={node} />;
+      case "Tactile Switch":
+        return <Switch node={node} />;
       case "Fuse":
         return (
           <group>

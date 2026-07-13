@@ -168,6 +168,20 @@ export default function RightSidebar() {
                 </div>
               </div>
             )}
+            {selectedNode.type === "Tactile Switch" && (
+              <div className="flex flex-col gap-3">
+                <Toggle
+                  label="Closed"
+                  active={(selectedNode.properties.state as string) === "closed"}
+                  onToggle={(val) =>
+                    updateNodeProperty(selectedNode.id, "state", val ? "closed" : "open")
+                  }
+                />
+                <p className="text-[10px] text-slate-400 font-mono leading-relaxed">
+                  Tip: you can also click the blade in the 3D view.
+                </p>
+              </div>
+            )}
             {selectedNode.type === "Capacitor" && (
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-mono text-slate-600">Capacitance</label>

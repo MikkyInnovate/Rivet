@@ -28,6 +28,10 @@ export const PART_PINS: Partial<Record<PartType, PinDef[]>> = {
     { id: "pos", label: "+", offset: [-0.175, 0.08, 0] },
     { id: "neg", label: "−", offset: [0.175, 0.08, 0] },
   ],
+  "Tactile Switch": [
+    { id: "a", label: "1", offset: [-0.35, 0.08, 0] },
+    { id: "b", label: "2", offset: [0.35, 0.08, 0] },
+  ],
 };
 
 export function getPins(type: PartType): PinDef[] {

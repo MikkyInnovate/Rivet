@@ -48,10 +48,10 @@ const parts: PartEntry[] = [
     implemented: false,
   },
   {
-    name: "Tactile Switch",
+    name: "Switch",
     type: "Tactile Switch",
-    icon: <img src="/images/parts/switch.png" alt="Tactile Switch" className="w-7 h-7 object-contain" />,
-    implemented: false,
+    icon: <img src="/images/parts/switch.png" alt="Switch" className="w-7 h-7 object-contain" />,
+    implemented: true,
   },
   {
     name: "Capacitor",

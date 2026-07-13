@@ -143,6 +143,15 @@ export function solveCircuit(
         a: netOf(n.id, "anode"), b: netOf(n.id, "cathode"),
         g: 1 / LED_SERIES_OHMS, volts: LED_FORWARD_V, conducting: true,
       });
+    } else if (n.type === "Tactile Switch") {
+      // Closed: near-ideal conductor. Open: no branch at all.
+      if ((n.properties.state as string) === "closed") {
+        branches.push({
+          nodeId: n.id, kind: "resistor",
+          a: netOf(n.id, "a"), b: netOf(n.id, "b"),
+          g: 1 / 1e-4, volts: 0,
+        });
+      }
     }
     // Capacitors and non-electrical parts: open at DC — no branch.
   }

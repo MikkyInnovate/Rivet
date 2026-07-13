@@ -190,6 +190,26 @@ console.log("    battery wired to each end; the shared strip completes the loop 
   check("LED state", r.ledStates["led1"], "on");
 }
 
+console.log("13) Switch in series: open → no current; closed → 14.878 mA");
+{
+  const sw = (state: string) => ({ id: "sw1", type: "Tactile Switch", properties: { state } });
+  const circuitWires = [
+    wire("bat", "pos", "sw1", "a"),
+    wire("sw1", "b", "r1", "a"),
+    wire("r1", "b", "led1", "anode"),
+    wire("led1", "cathode", "bat", "neg"),
+  ];
+  const open = solveCircuit([battery(), sw("open"), resistor("r1", 470), led()], circuitWires);
+  check("open: status", open.status, "open");
+  check("open: current", open.currentA, 0);
+  check("open: LED", open.ledStates["led1"], "off");
+
+  const closed = solveCircuit([battery(), sw("closed"), resistor("r1", 470), led()], circuitWires);
+  check("closed: status", closed.status, "ok");
+  check("closed: current (A)", closed.currentA, 7 / 470.5);
+  check("closed: LED", closed.ledStates["led1"], "on");
+}
+
 if (failures > 0) {
   console.error(`\n${failures} FAILURE(S)`);
   process.exit(1);
