@@ -1,5 +1,6 @@
 "use client";
-import React, { Suspense, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
 import { Canvas, useFrame, useThree, ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Grid, Environment } from "@react-three/drei";
 import { useSceneStore, SceneNode, PartType } from "@/store/useSceneStore";
@@ -129,12 +130,39 @@ function PartRenderer({ node }: { node: SceneNode }) {
   );
 }
 
+/** Teal ghost wire from the armed pin to the cursor while wiring. */
+function GhostWire({ from, to }: { from: [number, number, number]; to: [number, number, number] }) {
+  const geometry = useMemo(() => {
+    const a = new THREE.Vector3(...from);
+    const b = new THREE.Vector3(...to);
+    const mid = new THREE.Vector3().lerpVectors(a, b, 0.5);
+    mid.y += Math.min(0.3 + a.distanceTo(b) * 0.12, 1.2);
+    const curve = new THREE.CatmullRomCurve3([a, mid, b]);
+    return new THREE.TubeGeometry(curve, 20, 0.035, 8, false);
+  }, [from, to]);
+  return (
+    <mesh geometry={geometry} raycast={() => null}>
+      <meshBasicMaterial color="#2DD4BF" transparent opacity={0.6} depthWrite={false} />
+    </mesh>
+  );
+}
+
 export default function Scene() {
   const nodes = useSceneStore((s) => s.nodes);
   const wires = useSceneStore((s) => s.wires);
   const selectNode = useSceneStore((s) => s.selectNode);
   const selectWire = useSceneStore((s) => s.selectWire);
   const addNode = useSceneStore((s) => s.addNode);
+  const pendingPin = useSceneStore((s) => s.pendingPin);
+
+  // Rubber-band wiring preview: track the cursor on the ground plane while a
+  // pin is armed.
+  const [wireCursor, setWireCursor] = useState<[number, number] | null>(null);
+  useEffect(() => {
+    if (!pendingPin) setWireCursor(null);
+  }, [pendingPin]);
+  const pendingSource = pendingPin ? nodes.find((n) => n.id === pendingPin.nodeId) : null;
+  const ghostFrom = pendingSource && pendingPin ? pinWorldPosition(pendingSource, pendingPin.pinId) : null;
 
   return (
     <Canvas
@@ -199,6 +227,24 @@ export default function Scene() {
         sectionSize={5}
       />
 
+      {/* Wiring preview: cursor tracker plane + ghost wire */}
+      {pendingPin && (
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, -0.02, 0]}
+          onPointerMove={(e) => {
+            const [gx, gz] = rayToGround(e);
+            setWireCursor([gx, gz]);
+          }}
+        >
+          <planeGeometry args={[300, 300]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+      )}
+      {ghostFrom && wireCursor && (
+        <GhostWire from={ghostFrom} to={[wireCursor[0], 0.12, wireCursor[1]]} />
+      )}
+
       {/* Render all scene nodes */}
       {nodes.map((node) => (
         <PartRenderer key={node.id} node={node} />
@@ -224,7 +270,11 @@ export default function Scene() {
             targetNode.position[2],
           ];
 
-        const arcHt = wire.height === 'High' ? 6 : wire.height === 'Medium' ? 4 : 2;
+        // Natural jumper arc: scales with span instead of the old fixed
+        // rainbow heights; the height setting is a subtle multiplier.
+        const span = Math.hypot(start[0] - end[0], start[2] - end[2]);
+        const mult = wire.height === 'High' ? 1.6 : wire.height === 'Medium' ? 1 : 0.55;
+        const arcHt = Math.min(0.35 + span * 0.16, 2.0) * mult;
 
         return (
           <Wire

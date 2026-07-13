@@ -237,12 +237,23 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       set({ pendingPin: null });
       return;
     }
+    // Bench convention: leads touching the battery's negative terminal are
+    // black; everything else defaults to red. Editable in the inspector.
+    const isNegTerminal = (nid: string, pid: string) => {
+      const n = nodes.find((x) => x.id === nid);
+      return n?.type === 'Battery' && pid === 'neg';
+    };
+    const color =
+      isNegTerminal(pendingPin.nodeId, pendingPin.pinId) || isNegTerminal(nodeId, pinId)
+        ? 'Black'
+        : 'Red';
+
     get().addWire({
       sourceNodeId: pendingPin.nodeId,
       sourcePin: pendingPin.pinId,
       targetNodeId: nodeId,
       targetPin: pinId,
-      color: 'Red',
+      color,
       height: 'Low',
       showCurrent: false,
     });

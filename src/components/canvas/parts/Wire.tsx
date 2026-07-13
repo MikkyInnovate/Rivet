@@ -12,11 +12,13 @@ interface WireProps {
   arcHeight?: number;
 }
 
+// Small insulation ferrule where the wire meets the pin — sized to the pins,
+// not the old chunky box.
 function Connector({ position }: { position: [number, number, number] }) {
   return (
     <mesh position={position}>
-      <boxGeometry args={[0.2, 0.4, 0.2]} />
-      <meshStandardMaterial color="#1a1a1a" roughness={0.3} />
+      <cylinderGeometry args={[0.055, 0.065, 0.13, 12]} />
+      <meshStandardMaterial color="#26282c" roughness={0.45} />
     </mesh>
   );
 }
