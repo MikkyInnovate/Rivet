@@ -18,12 +18,6 @@ const parts: PartEntry[] = [
     implemented: false,
   },
   {
-    name: "Wire",
-    type: "Wire",
-    icon: <img src="/images/parts/wire.png" alt="Wire" className="w-7 h-7 object-contain" />,
-    implemented: true,
-  },
-  {
     name: "Resistor",
     type: "Resistor",
     icon: <img src="/images/parts/resistor.png" alt="Resistor" className="w-7 h-7 object-contain" />,
@@ -110,13 +104,6 @@ export default function LeftSidebar() {
           <h2 className="text-sm font-bold text-slate-800 font-mono tracking-wide truncate">
             {projectName}
           </h2>
-          <div className="w-7 h-7 rounded-full bg-slate-200 overflow-hidden border border-slate-300 shrink-0">
-            <img
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=NodalUser"
-              alt="User"
-              className="w-full h-full"
-            />
-          </div>
         </div>
         <div className="flex items-center gap-1 text-slate-400 text-[11px] font-mono mt-1">
           <span>📅</span>
@@ -129,8 +116,11 @@ export default function LeftSidebar() {
         <h3 className="text-[11px] font-bold text-slate-800 font-mono uppercase tracking-widest mb-3">
           Insert Part
         </h3>
+        <p className="text-[10px] text-slate-400 font-mono mb-3 leading-relaxed">
+          Wires: click a pin on one part, then a pin on another.
+        </p>
         <div className="flex flex-col gap-0.5">
-          {parts.map((p) => (
+          {parts.filter((p) => p.implemented).map((p) => (
             <button
               key={p.name}
               draggable={p.implemented}
@@ -164,6 +154,22 @@ export default function LeftSidebar() {
                 {p.name}
               </span>
             </button>
+          ))}
+
+          <h3 className="text-[11px] font-bold text-slate-400 font-mono uppercase tracking-widest mt-5 mb-2">
+            Coming soon
+          </h3>
+          {parts.filter((p) => !p.implemented).map((p) => (
+            <div
+              key={p.name}
+              className="flex items-center gap-3 px-2 py-1.5 rounded-md opacity-50 select-none"
+              title="Not available yet"
+            >
+              <div className="w-8 h-8 rounded bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 grayscale">
+                {p.icon}
+              </div>
+              <span className="text-[12px] font-mono text-slate-400">{p.name}</span>
+            </div>
           ))}
         </div>
       </div>

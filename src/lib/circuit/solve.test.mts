@@ -96,7 +96,8 @@ console.log("   hand calc: I = 7 / 690.5 = 10.138 mA → LED on");
   check("current (A)", r.currentA, 7 / 690.5);
 }
 
-console.log("6) Parallel resistors → honestly unsupported (no fake numbers)");
+console.log("6) PARALLEL resistors (470Ω ∥ 220Ω) — MNA v2");
+console.log("   hand calc: Req = 470·220/690 = 149.855Ω; I = 9/(149.855+0.5) = 59.86 mA");
 {
   const r = solveCircuit(
     [battery(), resistor("r1", 470), resistor("r2", 220)],
@@ -107,7 +108,8 @@ console.log("6) Parallel resistors → honestly unsupported (no fake numbers)");
       wire("r2", "b", "bat", "neg"),
     ]
   );
-  check("status", r.status, "unsupported");
+  check("status", r.status, "ok");
+  check("current (A)", r.currentA, 9 / (470 * 220 / 690 + 0.5));
 }
 
 console.log("7) 3V battery + LED + 470Ω: barely conducts");
@@ -145,10 +147,30 @@ console.log("9) No battery");
   check("status", r.status, "no-battery");
 }
 
-console.log("10) Battery terminals wired directly together");
+console.log("10) Battery terminals wired directly together — honest short circuit");
+console.log("    hand calc: I = 9 / 0.5Ω internal = 18 A");
 {
   const r = solveCircuit([battery()], [wire("bat", "pos", "bat", "neg")]);
-  check("status", r.status, "unsupported");
+  check("status", r.status, "ok");
+  check("current (A)", r.currentA, 18);
+  check("warns", r.message.includes("Short circuit"), true);
+}
+
+console.log("12) Series + parallel mix: 100Ω in series with (470Ω ∥ 220Ω)");
+console.log("    hand calc: Req = 100 + 149.855 = 249.855; I = 9/250.355 = 35.95 mA");
+{
+  const r = solveCircuit(
+    [battery(), resistor("r1", 470), resistor("r2", 220), resistor("r3", 100)],
+    [
+      wire("bat", "pos", "r3", "a"),
+      wire("r3", "b", "r1", "a"),
+      wire("r3", "b", "r2", "a"),
+      wire("r1", "b", "bat", "neg"),
+      wire("r2", "b", "bat", "neg"),
+    ]
+  );
+  check("status", r.status, "ok");
+  check("current (A)", r.currentA, 9 / (100 + 470 * 220 / 690 + 0.5));
 }
 
 console.log("11) Breadboard strip junction: resistor and LED share a column — NO wire between them");
